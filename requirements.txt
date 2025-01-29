@@ -1,1 +1,8 @@
 streamlit
+networkx
+pyvis
+pandas
+numpy
+stats
+colorsys
+re
