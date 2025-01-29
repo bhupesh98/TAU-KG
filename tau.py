@@ -145,6 +145,61 @@ def display_network_stats(nodes_data, edges_data, selected_cluster):
         st.sidebar.write(f"{node_type.capitalize()}: {count} ({percentage:.1f}%)")
 
 
+def create_corner_legend(nodes_data):
+    """Create a compact legend in the corner with node counts."""
+    # Count nodes by type
+    node_counts = {}
+    for node in nodes_data:
+        if node["type"] in node_counts:
+            node_counts[node["type"]] += 1
+        else:
+            node_counts[node["type"]] = 1
+
+    # Create legend container with custom CSS
+    st.markdown(
+        """
+        <style>
+        .corner-legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .color-box {
+            width: 12px;
+            height: 12px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Build legend HTML
+    legend_html = '<div class="corner-legend">'
+    for node_type, color in color_scheme.items():
+        count = node_counts.get(node_type, 0)
+        legend_html += f'''
+            <div class="legend-item">
+                <div class="color-box" style="background-color: {color}"></div>
+                <span>{node_type.capitalize()}: {count}</span>
+            </div>
+        '''
+    legend_html += '</div>'
+
+    # Display legend
+    st.markdown(legend_html, unsafe_allow_html=True)
 def main():
     """Main application function."""
     # Initialize network analyzer
@@ -169,7 +224,7 @@ def main():
         with open("network.html", "r", encoding="utf-8") as f:
             html = f.read()
         components.html(html, height=800)
-
+        create_corner_legend(nodes_data)
         # Display legend
         st.write("\n### Node Type Legend")
         cols = st.columns(4)
