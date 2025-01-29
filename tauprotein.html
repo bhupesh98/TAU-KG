@@ -1,0 +1,439 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+             /* position absolute is important and the container has to be relative or absolute as well. */
+          div.popup {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 display:none;
+                 background-color:#f5f4ed;
+                 -moz-border-radius: 3px;
+                 -webkit-border-radius: 3px;
+                 border-radius: 3px;
+                 border: 1px solid #808074;
+                 box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+          }
+
+          /* hide the original tooltip */
+          .vis-tooltip {
+            display:none;
+          }
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"group": 1, "id": "/content/abstract-tauprotein-set.txt", "label": "TAU protein", "level": 1, "name": "TAU protein", "node_count": 0, "processed": 2, "shape": "dot", "size": 10, "title": "0. \u003ca href=\u0027/content/abstract-tauprotein-set.txt\u0027 target=\u0027_blank\u0027\u003eTAU protein\u003c/a\u003e", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "/content/abstract-tauprotein-set.txt", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 2, "id": "Microtubule", "label": "Microtubule", "level": 2, "name": "Microtubule", "node_count": 68, "processed": 2, "shape": "dot", "size": 10, "title": "68. \u003ca href=\u0027https://en.wikipedia.org/wiki/Microtubule\u0027 target=\u0027_blank\u0027\u003eMicrotubule\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G2, L2, PR]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Microtubule", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 2, "id": "Neurofibrillary tangle", "label": "Neurofibrillary tangle", "level": 2, "name": "Neurofibrillary tangle", "node_count": 69, "processed": 2, "shape": "dot", "size": 10, "title": "69. \u003ca href=\u0027https://en.wikipedia.org/wiki/Neurofibrillary_tangle\u0027 target=\u0027_blank\u0027\u003eNeurofibrillary tangle\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G2, L2, PR]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Neurofibrillary_tangle", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 2, "id": "Alzheimer\u0027s disease", "label": "Alzheimer\u0027s disease", "level": 2, "name": "Alzheimer\u0027s disease", "node_count": 70, "processed": 2, "shape": "dot", "size": 10, "title": "70. \u003ca href=\u0027https://en.wikipedia.org/wiki/Alzheimer%27s_disease\u0027 target=\u0027_blank\u0027\u003eAlzheimer\u0027s disease\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G2, L2, PR]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Alzheimer%27s_disease", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 2, "id": "Protein phosphorylation", "label": "Protein phosphorylation", "level": 2, "name": "Protein phosphorylation", "node_count": 71, "processed": 2, "shape": "dot", "size": 10, "title": "71. \u003ca href=\u0027https://en.wikipedia.org/wiki/Protein_phosphorylation\u0027 target=\u0027_blank\u0027\u003eProtein phosphorylation\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G2, L2, PR]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Protein_phosphorylation", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 2, "id": "Frontotemporal dementia", "label": "Frontotemporal dementia", "level": 2, "name": "Frontotemporal dementia", "node_count": 72, "processed": 2, "shape": "dot", "size": 10, "title": "72. \u003ca href=\u0027https://en.wikipedia.org/wiki/Frontotemporal_dementia\u0027 target=\u0027_blank\u0027\u003eFrontotemporal dementia\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G2, L2, PR]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Frontotemporal_dementia", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Actin", "label": "Actin", "level": 3, "name": "Actin Filament", "node_count": 73, "processed": 0, "shape": "dot", "size": 10, "title": "73. \u003ca href=\u0027https://en.wikipedia.org/wiki/Actin\u0027 target=\u0027_blank\u0027\u003eActin\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Actin", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Intermediate filament", "label": "Intermediate filament", "level": 3, "name": "Intermediate Filament", "node_count": 74, "processed": 0, "shape": "dot", "size": 10, "title": "74. \u003ca href=\u0027https://en.wikipedia.org/wiki/Intermediate_filament\u0027 target=\u0027_blank\u0027\u003eIntermediate filament\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Intermediate_filament", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Kinesin", "label": "Kinesin", "level": 3, "name": "Kinesin", "node_count": 75, "processed": 0, "shape": "dot", "size": 10, "title": "75. \u003ca href=\u0027https://en.wikipedia.org/wiki/Kinesin\u0027 target=\u0027_blank\u0027\u003eKinesin\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Kinesin", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Dynein", "label": "Dynein", "level": 3, "name": "Dynein", "node_count": 76, "processed": 0, "shape": "dot", "size": 10, "title": "76. \u003ca href=\u0027https://en.wikipedia.org/wiki/Dynein\u0027 target=\u0027_blank\u0027\u003eDynein\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Dynein", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Centriole", "label": "Centriole", "level": 3, "name": "Centriole", "node_count": 77, "processed": 0, "shape": "dot", "size": 10, "title": "77. \u003ca href=\u0027https://en.wikipedia.org/wiki/Centriole\u0027 target=\u0027_blank\u0027\u003eCentriole\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Centriole", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Amyloid plaques", "label": "Amyloid plaques", "level": 3, "name": "Amyloid plaques", "node_count": 78, "processed": 0, "shape": "dot", "size": 10, "title": "78. \u003ca href=\u0027https://en.wikipedia.org/wiki/Amyloid_plaques\u0027 target=\u0027_blank\u0027\u003eAmyloid plaques\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Amyloid_plaques", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Tauopathy", "label": "Tauopathy", "level": 3, "name": "Tauopathy", "node_count": 79, "processed": 0, "shape": "dot", "size": 10, "title": "79. \u003ca href=\u0027https://en.wikipedia.org/wiki/Tauopathy\u0027 target=\u0027_blank\u0027\u003eTauopathy\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Tauopathy", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Lewy bodies", "label": "Lewy bodies", "level": 3, "name": "Lewy bodies", "node_count": 80, "processed": 0, "shape": "dot", "size": 10, "title": "80. \u003ca href=\u0027https://en.wikipedia.org/wiki/Lewy_bodies\u0027 target=\u0027_blank\u0027\u003eLewy bodies\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Lewy_bodies", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Neurodegeneration", "label": "Neurodegeneration", "level": 3, "name": "Neurodegeneration", "node_count": 81, "processed": 0, "shape": "dot", "size": 10, "title": "81. \u003ca href=\u0027https://en.wikipedia.org/wiki/Neurodegeneration\u0027 target=\u0027_blank\u0027\u003eNeurodegeneration\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Neurodegeneration", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Parkinson\u0027s disease", "label": "Parkinson\u0027s disease", "level": 3, "name": "Parkinson\u0027s disease", "node_count": 82, "processed": 0, "shape": "dot", "size": 10, "title": "82. \u003ca href=\u0027https://en.wikipedia.org/wiki/Parkinson%27s_disease\u0027 target=\u0027_blank\u0027\u003eParkinson\u0027s disease\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Parkinson%27s_disease", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Dementia", "label": "Dementia", "level": 3, "name": "Dementia", "node_count": 83, "processed": 0, "shape": "dot", "size": 10, "title": "83. \u003ca href=\u0027https://en.wikipedia.org/wiki/Dementia\u0027 target=\u0027_blank\u0027\u003eDementia\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Dementia", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Huntington\u0027s disease", "label": "Huntington\u0027s disease", "level": 3, "name": "Huntington\u0027s disease", "node_count": 84, "processed": 0, "shape": "dot", "size": 10, "title": "84. \u003ca href=\u0027https://en.wikipedia.org/wiki/Huntington%27s_disease\u0027 target=\u0027_blank\u0027\u003eHuntington\u0027s disease\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Huntington%27s_disease", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Dementia with Lewy bodies", "label": "Dementia with Lewy bodies", "level": 3, "name": "Lewy body dementia", "node_count": 85, "processed": 0, "shape": "dot", "size": 10, "title": "85. \u003ca href=\u0027https://en.wikipedia.org/wiki/Dementia_with_Lewy_bodies\u0027 target=\u0027_blank\u0027\u003eDementia with Lewy bodies\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Dementia_with_Lewy_bodies", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Protein kinase", "label": "Protein kinase", "level": 3, "name": "Protein Kinase", "node_count": 86, "processed": 0, "shape": "dot", "size": 10, "title": "86. \u003ca href=\u0027https://en.wikipedia.org/wiki/Protein_kinase\u0027 target=\u0027_blank\u0027\u003eProtein kinase\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Protein_kinase", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Signal transduction", "label": "Signal transduction", "level": 3, "name": "Signal Transduction", "node_count": 87, "processed": 0, "shape": "dot", "size": 10, "title": "87. \u003ca href=\u0027https://en.wikipedia.org/wiki/Signal_transduction\u0027 target=\u0027_blank\u0027\u003eSignal transduction\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Signal_transduction", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Phosphoprotein", "label": "Phosphoprotein", "level": 3, "name": "Phosphoprotein", "node_count": 88, "processed": 0, "shape": "dot", "size": 10, "title": "88. \u003ca href=\u0027https://en.wikipedia.org/wiki/Phosphoprotein\u0027 target=\u0027_blank\u0027\u003ePhosphoprotein\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Phosphoprotein", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Protein kinase C", "label": "Protein kinase C", "level": 3, "name": "Protein Kinase C", "node_count": 89, "processed": 0, "shape": "dot", "size": 10, "title": "89. \u003ca href=\u0027https://en.wikipedia.org/wiki/Protein_kinase_C\u0027 target=\u0027_blank\u0027\u003eProtein kinase C\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Protein_kinase_C", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Mitogen-activated protein kinase", "label": "Mitogen-activated protein kinase", "level": 3, "name": "Mitogen-Activated Protein Kinase", "node_count": 90, "processed": 0, "shape": "dot", "size": 10, "title": "90. \u003ca href=\u0027https://en.wikipedia.org/wiki/Mitogen-activated_protein_kinase\u0027 target=\u0027_blank\u0027\u003eMitogen-activated protein kinase\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Mitogen-activated_protein_kinase", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Pick\u0027s disease", "label": "Pick\u0027s disease", "level": 3, "name": "Pick\u0027s disease", "node_count": 91, "processed": 0, "shape": "dot", "size": 10, "title": "91. \u003ca href=\u0027https://en.wikipedia.org/wiki/Pick%27s_disease\u0027 target=\u0027_blank\u0027\u003ePick\u0027s disease\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Pick%27s_disease", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Lewy body dementia", "label": "Lewy body dementia", "level": 3, "name": "Lewy body dementia", "node_count": 92, "processed": 0, "shape": "dot", "size": 10, "title": "92. \u003ca href=\u0027https://en.wikipedia.org/wiki/Lewy_body_dementia\u0027 target=\u0027_blank\u0027\u003eLewy body dementia\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Lewy_body_dementia", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Corticobasal degeneration", "label": "Corticobasal degeneration", "level": 3, "name": "Corticobasal degeneration", "node_count": 93, "processed": 0, "shape": "dot", "size": 10, "title": "93. \u003ca href=\u0027https://en.wikipedia.org/wiki/Corticobasal_degeneration\u0027 target=\u0027_blank\u0027\u003eCorticobasal degeneration\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Corticobasal_degeneration", "wikipedia_normalized": "", "wikipedia_resp_code": 200}, {"group": 3, "id": "Progressive supranuclear palsy", "label": "Progressive supranuclear palsy", "level": 3, "name": "Progressive supranuclear palsy", "node_count": 94, "processed": 0, "shape": "dot", "size": 10, "title": "94. \u003ca href=\u0027https://en.wikipedia.org/wiki/Progressive_supranuclear_palsy\u0027 target=\u0027_blank\u0027\u003eProgressive supranuclear palsy\u003c/a\u003e\u003cbr /\u003e1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal \u003cbr /\u003e[200, G3, L3, UN]", "wikipedia_canonical": "", "wikipedia_content": "1. Physiol Rev. 2004 Apr;84(2):361-84. doi: 10.1152/physrev.00024.2003.\n\nRole of tau protein in both physiological and pathological conditions.\n\nAvila J(1), Lucas JJ, Perez M, Hernandez F.\n\nAuthor information:\n(1)Centro de Biolog\u00eda Molecular \"Severo Ochoa\", Facultad de Ciencias, Campus de \nCantoblanco, Universidad Aut\u00f3noma de Madrid, 28049 Madrid, Spain. \njavila@cbm.uam.es\n\nThe morphology of a neuron is determined by its cytoskeletal scaffolding. Thus \nproteins that associate with the principal ", "wikipedia_link": "https://en.wikipedia.org/wiki/Progressive_supranuclear_palsy", "wikipedia_normalized": "", "wikipedia_resp_code": 200}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "/content/abstract-tauprotein-set.txt", "reason": "Tau proteins stabilize microtubules, which are a component of the cell\u0027s cytoskeleton.", "similarity": 0.9, "to": "Microtubule", "width": 1}, {"arrows": "to", "from": "/content/abstract-tauprotein-set.txt", "reason": "Neurofibrillary tangles are aggregates of hyperphosphorylated tau protein that are most commonly known as a primary marker of Alzheimer\u0027s disease.", "similarity": 0.85, "to": "Neurofibrillary tangle", "width": 1}, {"arrows": "to", "from": "/content/abstract-tauprotein-set.txt", "reason": "Tau proteins are involved in the formation of tangles in the brain, a characteristic of Alzheimer\u0027s disease.", "similarity": 0.8, "to": "Alzheimer\u0027s disease", "width": 1}, {"arrows": "to", "from": "/content/abstract-tauprotein-set.txt", "reason": "Tau proteins can undergo phosphorylation, a process that is implicated in several diseases.", "similarity": 0.75, "to": "Protein phosphorylation", "width": 1}, {"arrows": "to", "from": "/content/abstract-tauprotein-set.txt", "reason": "Mutations in the tau gene can lead to frontotemporal dementia, a neurodegenerative disease.", "similarity": 0.7, "to": "Frontotemporal dementia", "width": 1}, {"arrows": "to", "from": "Microtubule", "reason": "Both are key components of the cytoskeleton, involved in maintaining cell shape and enabling cell movement.", "similarity": 0.9, "to": "Actin", "width": 1}, {"arrows": "to", "from": "Microtubule", "reason": "Like microtubules, intermediate filaments are part of the cytoskeleton and provide structural support for cells.", "similarity": 0.85, "to": "Intermediate filament", "width": 1}, {"arrows": "to", "from": "Microtubule", "reason": "Kinesins are motor proteins that move along microtubules, indicating a direct functional relationship.", "similarity": 0.8, "to": "Kinesin", "width": 1}, {"arrows": "to", "from": "Microtubule", "reason": "Dyneins are motor proteins that move along microtubules in cells, similar to kinesins.", "similarity": 0.8, "to": "Dynein", "width": 1}, {"arrows": "to", "from": "Microtubule", "reason": "Centrioles are composed of microtubules and play a key role in cell division, a process in which microtubules are also heavily involved.", "similarity": 0.75, "to": "Centriole", "width": 1}, {"arrows": "to", "from": "Neurofibrillary tangle", "reason": "Both are abnormal aggregates of protein found in the brain and are hallmarks of Alzheimer\u0027s disease.", "similarity": 0.9, "to": "Amyloid plaques", "width": 1}, {"arrows": "to", "from": "Neurofibrillary tangle", "reason": "Both involve the tau protein and are associated with neurodegenerative diseases.", "similarity": 0.85, "to": "Tauopathy", "width": 1}, {"arrows": "to", "from": "Neurofibrillary tangle", "reason": "Both are protein aggregates that form in the brain and are associated with neurodegenerative diseases.", "similarity": 0.8, "to": "Lewy bodies", "width": 1}, {"arrows": "to", "from": "Neurofibrillary tangle", "reason": "Both are associated with the progressive loss of structure or function of neurons, including death of neurons.", "similarity": 0.75, "to": "Neurodegeneration", "width": 1}, {"arrows": "to", "from": "Neurofibrillary tangle", "reason": "Neurofibrillary tangles are a primary marker of Alzheimer\u0027s disease.", "similarity": 0.95, "to": "Alzheimer\u0027s disease", "width": 1}, {"arrows": "to", "from": "Alzheimer\u0027s disease", "reason": "Both are neurodegenerative disorders affecting the nervous system and have similar symptoms such as memory loss and cognitive decline.", "similarity": 0.85, "to": "Parkinson\u0027s disease", "width": 1}, {"arrows": "to", "from": "Alzheimer\u0027s disease", "reason": "Alzheimer\u0027s is a type of dementia. Both involve a decline in cognitive abilities severe enough to interfere with daily life.", "similarity": 0.95, "to": "Dementia", "width": 1}, {"arrows": "to", "from": "Alzheimer\u0027s disease", "reason": "Both are genetic, neurodegenerative diseases that affect cognitive and motor functions.", "similarity": 0.75, "to": "Huntington\u0027s disease", "width": 1}, {"arrows": "to", "from": "Alzheimer\u0027s disease", "reason": "Both are types of dementia and have overlapping symptoms and pathological features.", "similarity": 0.8, "to": "Dementia with Lewy bodies", "width": 1}, {"arrows": "to", "from": "Alzheimer\u0027s disease", "reason": "Both are types of dementia that cause progressive damage to brain cells, leading to symptoms such as memory loss and behavioural changes.", "similarity": 0.8, "to": "Frontotemporal dementia", "width": 1}, {"arrows": "to", "from": "Protein phosphorylation", "reason": "Protein kinases are enzymes that modify other proteins by chemically adding phosphate groups to them (phosphorylation).", "similarity": 0.9, "to": "Protein kinase", "width": 1}, {"arrows": "to", "from": "Protein phosphorylation", "reason": "Signal transduction often involves protein phosphorylation, which is a key mechanism in transmitting signals within cells.", "similarity": 0.85, "to": "Signal transduction", "width": 1}, {"arrows": "to", "from": "Protein phosphorylation", "reason": "Phosphoproteins are proteins that are modified by phosphorylation, a process that is directly related to protein phosphorylation.", "similarity": 0.8, "to": "Phosphoprotein", "width": 1}, {"arrows": "to", "from": "Protein phosphorylation", "reason": "Protein Kinase C is a type of protein kinase that plays roles in several signal transduction cascades and is involved in protein phosphorylation.", "similarity": 0.75, "to": "Protein kinase C", "width": 1}, {"arrows": "to", "from": "Protein phosphorylation", "reason": "Mitogen-Activated Protein Kinases are involved in directing cellular responses to a diverse array of stimuli, such as mitogens, osmotic stress, heat shock and proinflammatory cytokines, and they regulate protein synthesis, cell proliferation, differentiation, mitosis and cell survival/apoptosis, often through protein phosphorylation.", "similarity": 0.7, "to": "Mitogen-activated protein kinase", "width": 1}, {"arrows": "to", "from": "Frontotemporal dementia", "reason": "Both are neurodegenerative diseases that affect memory and cognitive functions.", "similarity": 0.8, "to": "Alzheimer\u0027s disease", "width": 1}, {"arrows": "to", "from": "Frontotemporal dementia", "reason": "Pick\u0027s disease is a type of frontotemporal dementia, characterized by similar symptoms and brain changes.", "similarity": 0.9, "to": "Pick\u0027s disease", "width": 1}, {"arrows": "to", "from": "Frontotemporal dementia", "reason": "Both are types of dementia that lead to progressive cognitive and motor function decline.", "similarity": 0.7, "to": "Lewy body dementia", "width": 1}, {"arrows": "to", "from": "Frontotemporal dementia", "reason": "Both are neurodegenerative diseases that can lead to dementia and have overlapping symptoms.", "similarity": 0.7, "to": "Corticobasal degeneration", "width": 1}, {"arrows": "to", "from": "Frontotemporal dementia", "reason": "Both are progressive diseases that can lead to dementia and have similar symptoms.", "similarity": 0.6, "to": "Progressive supranuclear palsy", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "forceAtlas2Based": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.01,
+            "damping": 0.4,
+            "gravitationalConstant": -50,
+            "springConstant": 0.03,
+            "springLength": 100
+        },
+        "solver": "forceAtlas2Based",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+                  // make a custom popup
+                      var popup = document.createElement("div");
+                      popup.className = 'popup';
+                      popupTimeout = null;
+                      popup.addEventListener('mouseover', function () {
+                          console.log(popup)
+                          if (popupTimeout !== null) {
+                              clearTimeout(popupTimeout);
+                              popupTimeout = null;
+                          }
+                      });
+                      popup.addEventListener('mouseout', function () {
+                          if (popupTimeout === null) {
+                              hidePopup();
+                          }
+                      });
+                      container.appendChild(popup);
+
+
+                      // use the popup event to show
+                      network.on("showPopup", function (params) {
+                          showPopup(params);
+                      });
+
+                      // use the hide event to hide it
+                      network.on("hidePopup", function (params) {
+                          hidePopup();
+                      });
+
+                      // hiding the popup through css
+                      function hidePopup() {
+                          popupTimeout = setTimeout(function () { popup.style.display = 'none'; }, 500);
+                      }
+
+                      // showing the popup
+                      function showPopup(nodeId) {
+                          // get the data from the vis.DataSet
+                          var nodeData = nodes.get([nodeId]);
+                          popup.innerHTML = nodeData[0].title;
+
+                          // get the position of the node
+                          var posCanvas = network.getPositions([nodeId])[nodeId];
+
+                          // get the bounding box of the node
+                          var boundingBox = network.getBoundingBox(nodeId);
+
+                          //position tooltip:
+                          posCanvas.x = posCanvas.x + 0.5 * (boundingBox.right - boundingBox.left);
+
+                          // convert coordinates to the DOM space
+                          var posDOM = network.canvasToDOM(posCanvas);
+
+                          // Give it an offset
+                          posDOM.x += 10;
+                          posDOM.y -= 20;
+
+                          // show and place the tooltip.
+                          popup.style.display = 'block';
+                          popup.style.top = posDOM.y + 'px';
+                          popup.style.left = posDOM.x + 'px';
+                      }
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
