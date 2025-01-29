@@ -149,7 +149,7 @@ def display_legend_in_sidebar(nodes_data):
     """Display color-coded legend with node counts in the sidebar."""
     st.sidebar.markdown("---")  # Separator
     st.sidebar.markdown("### Legend")
-
+    
     # Count nodes by type
     node_counts = {}
     for node in nodes_data:
@@ -157,7 +157,7 @@ def display_legend_in_sidebar(nodes_data):
             node_counts[node["type"]] += 1
         else:
             node_counts[node["type"]] = 1
-
+    
     # Display each node type with color and count
     for node_type, color in color_scheme.items():
         count = node_counts.get(node_type, 0)
@@ -168,6 +168,7 @@ def display_legend_in_sidebar(nodes_data):
             f'<span>{node_type.capitalize()}: {count}</span></div>',
             unsafe_allow_html=True
         )
+
 def main():
     """Main application function."""
     # Initialize network analyzer
@@ -179,33 +180,35 @@ def main():
         "Select Cluster to Highlight",
         ["All"] + list(clusters_data.keys())
     )
+    
+    # Add legend to sidebar
     display_legend_in_sidebar(nodes_data)
 
-    # Create tabs for different views
+    # Rest of your main function remains the same...
     main_tab, stats_tab = st.tabs(["Network Visualization", "Detailed Analysis"])
-
+    
     with main_tab:
         st.title("Biomedical Knowledge Graph Visualization")
-
+        
         # Create and display network
         net = create_network(None if selected_cluster == "All" else selected_cluster)
         net.save_graph("network.html")
         with open("network.html", "r", encoding="utf-8") as f:
             html = f.read()
         components.html(html, height=800)
-        create_corner_legend(nodes_data)
+        
         # Display legend
-        st.write("\n### Node Type Legend")
-        cols = st.columns(4)
-        for i, (node_type, color) in enumerate(color_scheme.items()):
-            with cols[i]:
-                st.markdown(
-                    f'<div style="display: flex; align-items: center;">'
-                    f'<div style="width: 20px; height: 20px; background-color: {color}; '
-                    f'margin-right: 10px; border-radius: 50%;"></div>'
-                    f'<span style="font-weight: 500;">{node_type.capitalize()}</span></div>',
-                    unsafe_allow_html=True
-                )
+        # st.write("\n### Node Type Legend")
+        # cols = st.columns(4)
+        # for i, (node_type, color) in enumerate(color_scheme.items()):
+        #     with cols[i]:
+        #         st.markdown(
+        #             f'<div style="display: flex; align-items: center;">'
+        #             f'<div style="width: 20px; height: 20px; background-color: {color}; '
+        #             f'margin-right: 10px; border-radius: 50%;"></div>'
+        #             f'<span style="font-weight: 500;">{node_type.capitalize()}</span></div>',
+        #             unsafe_allow_html=True
+        #         )
 
     with stats_tab:
         # Display network statistics based on selection
