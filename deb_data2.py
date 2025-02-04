@@ -86,6 +86,16 @@ clusters_data = {
         "TSC2",
         "RHEB",
         "pS6"
+    ],
+      "Experimental System": [
+        "SH-SY5Y cell line",
+        "PC1",
+        "SC2",
+        "FACS sorted low tau population",
+        "Cas9",
+        "SP70 antibody",
+        "gRNA MAPT-1",
+        "gRNA MAPT-2"
     ]
 }
 
@@ -513,7 +523,19 @@ nodes_data = [
         "type": "protein",
         "cluster": "mTOR Pathway",
         "size": 0.8
-    }
+    },
+
+    # Cell lines and clones
+    {"id": "SH-SY5Y cell line", "type": "cell line", "cluster": "Experimental System", "size": 2.30},
+    {"id": "PC1", "type": "cell line clone", "cluster": "Experimental System", "size": 1.61},
+    {"id": "SC2", "type": "cell line clone", "cluster": "Experimental System", "size": 1.61},
+    
+    # Cell populations and reagents
+    {"id": "FACS sorted low tau population", "type": "cell population", "cluster": "Experimental System", "size": 1.79},
+    {"id": "Cas9", "type": "reagent", "cluster": "Experimental System", "size": 2.08},
+    {"id": "SP70 antibody", "type": "reagent", "cluster": "Experimental System", "size": 1.39},
+    {"id": "gRNA MAPT-1", "type": "reagent", "cluster": "Experimental System", "size": 1.79},
+    {"id": "gRNA MAPT-2", "type": "reagent", "cluster": "Experimental System", "size": 1.79}
 ]
 
 edges_data = [
@@ -978,5 +1000,17 @@ edges_data = [
         "target": "NCOA6",
         "relation": "co-regulates",
         "score": 0.75
-    }
+    },
+        {"source": "SH-SY5Y cell line", "target": "PC1", "relation": "parent of", "score": 0.95},
+    {"source": "SH-SY5Y cell line", "target": "SC2", "relation": "parent of", "score": 0.95},
+    
+    # CRISPR system interactions
+    {"source": "Cas9", "target": "MAPT", "relation": "edits", "score": 0.90},
+    {"source": "gRNA MAPT-1", "target": "MAPT", "relation": "targets", "score": 0.85},
+    {"source": "gRNA MAPT-2", "target": "MAPT", "relation": "targets", "score": 0.85},
+    
+    # Antibody and cell population relationships
+    {"source": "SP70 antibody", "target": "Tau Protein", "relation": "detects", "score": 0.95},
+    {"source": "PC1", "target": "FACS sorted low tau population", "relation": "generates", "score": 0.80},
+    {"source": "SC2", "target": "FACS sorted low tau population", "relation": "generates", "score": 0.80}
 ]
