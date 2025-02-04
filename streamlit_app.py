@@ -12,7 +12,7 @@ import numpy as np
 from IPython.display import HTML, display
 import colorsys
 import re
-from deb_data import *
+from deb_data2 import *
 # Color scheme
 color_scheme = {
     "gene": "#1f77b4",  # Blue
@@ -56,21 +56,27 @@ def create_network(selected_cluster=None):
     # Add nodes
     for node in nodes_data:
         color = color_scheme[node["type"]]
-        size = 20
-
+        # Base size is determined by the 'size' parameter in data
+        # Multiply by 10 to make the differences more visible
+        base_size = node["size"] * 10
+        
         if selected_cluster:
-            is_in_cluster = node["id"] in clusters_data.get(selected_cluster, [])
+            is_in_cluster = node["cluster"] == selected_cluster
             if is_in_cluster:
-                size = 30
+                # For nodes in selected cluster, increase size by 50%
+                size = base_size * 1.5
             else:
+                size = base_size
                 rgb = hex_to_rgb(color)
                 color = f"rgba{rgb + (0.15,)}"
+        else:
+            size = base_size
 
         net.add_node(
             node["id"],
             label=node["id"],
             color=color,
-            title=f"Type: {node['type']}<br>Cluster: {node['cluster']}<br>ID: {node['id']}",
+            title=f"Type: {node['type']}<br>Cluster: {node['cluster']}<br>Size: {node['size']:.2f}<br>ID: {node['id']}",
             size=size
         )
 
@@ -80,15 +86,19 @@ def create_network(selected_cluster=None):
         edge_width = edge["score"] * 3
 
         if selected_cluster:
-            source_in_cluster = edge["source"] in clusters_data.get(selected_cluster, [])
-            target_in_cluster = edge["target"] in clusters_data.get(selected_cluster, [])
+            source_node = next((n for n in nodes_data if n["id"] == edge["source"]), None)
+            target_node = next((n for n in nodes_data if n["id"] == edge["target"]), None)
+            
+            if source_node and target_node:
+                source_in_cluster = source_node["cluster"] == selected_cluster
+                target_in_cluster = target_node["cluster"] == selected_cluster
 
-            if source_in_cluster or target_in_cluster:
-                edge_color = "#000000"
-                edge_width = edge["score"] * 4
-            else:
-                edge_color = "rgba(102, 102, 102, 0.15)"
-                edge_width = edge["score"] * 2
+                if source_in_cluster or target_in_cluster:
+                    edge_color = "#000000"
+                    edge_width = edge["score"] * 4
+                else:
+                    edge_color = "rgba(102, 102, 102, 0.15)"
+                    edge_width = edge["score"] * 2
 
         net.add_edge(
             edge["source"],
@@ -118,8 +128,6 @@ def create_network(selected_cluster=None):
         }
     }
     """)
-
-    return net
 
 
 def display_network_stats(nodes_data, edges_data, selected_cluster):
