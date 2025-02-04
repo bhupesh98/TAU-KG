@@ -11,14 +11,18 @@ st.set_page_config(layout="wide", page_title="Biomedical Knowledge Graph")
 
 # Color scheme
 color_scheme = {
-    "gene": "#1f77b4",  # Blue
-    "protein": "#2ca02c",  # Green
-    "disease": "#d62728",  # Red
-    "pathway": "#9467bd",  # Purple
-    "cell line": "#ff7f0e",  # Orange
+    "gene": "#1f77b4",      # Blue
+    "gene group": "#aec7e8", # Light Blue
+    "protein": "#2ca02c",   # Green
+    "protein complex": "#98df8a",  # Light Green
+    "protein fragment": "#ff9896", # Light Red
+    "disease": "#d62728",   # Red
+    "pathway": "#9467bd",   # Purple
+    "process": "#c5b0d5",   # Light Purple
+    "cell line": "#ff7f0e", # Orange
     "cell line clone": "#e377c2",  # Pink
     "cell population": "#8c564b",  # Brown
-    "reagent": "#17becf"  # Cyan
+    "reagent": "#17becf"    # Cyan
 }
 # Utility functions
 def hex_to_rgb(hex_color):
