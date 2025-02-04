@@ -264,29 +264,111 @@ def handle_selected_nodes():
         
         st.sidebar.markdown(f"**Selected ({len(selected_nodes)}):** {', '.join(selected_nodes)}")
         
+        # Collect node and relationship data
         selected_node_data = []
+        selected_relationships = []
+        
+        # Get node data and relationships
         for node_id in selected_nodes:
+            # Get node data
             node_data = next((n for n in nodes_data if n["id"] == node_id), None)
             if node_data:
                 selected_node_data.append(node_data)
+            
+            # Get relationships where either source or target is in selected nodes
+            for edge in edges_data:
+                if edge["source"] == node_id or edge["target"] == node_id:
+                    if edge["source"] in selected_nodes and edge["target"] in selected_nodes:
+                        selected_relationships.append(edge)
         
-        relationships = get_node_relationships(selected_nodes)
+        # Create subgraph visualization for selected nodes
+        if st.sidebar.button("Create Selected Nodes Network"):
+            with st.spinner("Creating network of selected nodes..."):
+                subnet = Network(height="800px", width="100%", bgcolor="#ffffff", font_color="black")
+                subnet.force_atlas_2based()
+                
+                # Add selected nodes
+                for node in selected_node_data:
+                    color = color_scheme[node["type"]]
+                    subnet.add_node(
+                        node["id"],
+                        label=node["id"],
+                        color=color,
+                        title=f"Type: {node['type']}<br>Cluster: {node['cluster']}<br>Size: {node['size']:.2f}",
+                        size=node["size"] * 10
+                    )
+                
+                # Add edges between selected nodes
+                for edge in selected_relationships:
+                    subnet.add_edge(
+                        edge["source"],
+                        edge["target"],
+                        title=f"Relation: {edge['relation']}<br>Score: {edge['score']:.2f}",
+                        width=edge["score"] * 3,
+                        color="#666666"
+                    )
+                
+                subnet.save_graph("selected_network.html")
+                with open("selected_network.html", "r", encoding="utf-8") as f:
+                    html_content = f.read()
+                    
+                st.sidebar.download_button(
+                    label="Download Selected Network HTML",
+                    data=html_content,
+                    file_name="selected_nodes_network.html",
+                    mime="text/html"
+                )
         
-        # Prepare data for download
-        download_data = {
-            "selected_nodes": selected_node_data,
-            "relationships": relationships
+        # Prepare textual data for download
+        text_data = {
+            "nodes": selected_node_data,
+            "relationships": selected_relationships,
+            "summary": {
+                "total_selected_nodes": len(selected_nodes),
+                "node_types": {},
+                "total_relationships": len(selected_relationships)
+            }
         }
         
-        # Convert to JSON
-        json_data = json.dumps(download_data, indent=2)
+        # Count node types
+        for node in selected_node_data:
+            node_type = node["type"]
+            if node_type in text_data["summary"]["node_types"]:
+                text_data["summary"]["node_types"][node_type] += 1
+            else:
+                text_data["summary"]["node_types"][node_type] = 1
         
-        # Create download button
+        # Create JSON download button
+        json_data = json.dumps(text_data, indent=2)
         st.sidebar.download_button(
-            label=f"Download Selected Nodes Data",
+            label="Download Selected Nodes Data (JSON)",
             data=json_data,
             file_name="selected_nodes_data.json",
             mime="application/json"
+        )
+        
+        # Create readable text format
+        text_content = f"""Selected Nodes Analysis
+----------------------------
+Total Nodes: {len(selected_nodes)}
+Total Relationships: {len(selected_relationships)}
+
+Node Type Distribution:
+{chr(10).join(f'- {type_}: {count}' for type_, count in text_data['summary']['node_types'].items())}
+
+Detailed Node Information:
+{chr(10).join(f'- {node["id"]} ({node["type"]}): Cluster={node["cluster"]}, Size={node["size"]:.2f}' for node in selected_node_data)}
+
+Relationships:
+{chr(10).join(f'- {rel["source"]} -> {rel["target"]}: {rel["relation"]} (Score: {rel["score"]:.2f})' for rel in selected_relationships)}
+"""
+        
+        # Create text download button
+        st.sidebar.download_button(
+            label="Download Selected Nodes Report (TXT)",
+            data=text_content,
+            file_name="selected_nodes_report.txt",
+            mime="text/plain"
         )
 
 def add_help_section():
@@ -298,14 +380,8 @@ def add_help_section():
         - Use the search box to find specific nodes
         - Download selected node data from the sidebar
         - Clear selection to start over
-        
-        **Color Legend:**
-        - Blue: Genes
-        - Green: Proteins
-        - Red: Diseases
-        - Purple: Pathways
-        
-        **Useful Features:**
+                        
+        **Features:**
         - Export full network or specific clusters
         - Download detailed statistics
         - Search and highlight specific nodes
