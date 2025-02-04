@@ -15,11 +15,14 @@ import re
 from deb_data2 import *
 # Color scheme
 color_scheme = {
-    "gene": "#1f77b4",  # Blue
-    "protein": "#2ca02c",  # Green
-    "disease": "#d62728",  # Red
-    "pathway": "#9467bd"  # Purple
-}
+    "gene": "#1f77b4",        
+    "gene group": "#1f77b4",  
+    "protein": "#2ca02c",    
+    "protein complex": "#2ca02c",  
+    "protein fragment": "#2ca02c", 
+    "disease": "#d62728",     
+    "pathway": "#9467bd",     
+    "process": "#9467bd"      }
 
 # Utility functions
 def hex_to_rgb(hex_color):
