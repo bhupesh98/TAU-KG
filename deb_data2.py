@@ -87,7 +87,7 @@ clusters_data = {
         "RHEB",
         "pS6"
     ],
-      "Experimental System": [
+     "Experimental System": [
         "SH-SY5Y cell line",
         "PC1",
         "SC2",
@@ -526,7 +526,7 @@ nodes_data = [
     },
 
     # Cell lines and clones
-    {"id": "SH-SY5Y cell line", "type": "cell line", "cluster": "Experimental System", "size": 2.30},
+ {"id": "SH-SY5Y cell line", "type": "cell line", "cluster": "Experimental System", "size": 2.30},
     {"id": "PC1", "type": "cell line clone", "cluster": "Experimental System", "size": 1.61},
     {"id": "SC2", "type": "cell line clone", "cluster": "Experimental System", "size": 1.61},
     
