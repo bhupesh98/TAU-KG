@@ -9,7 +9,11 @@ clusters_data = {
         "N-224 Tau Fragment",
         "Alzheimer's Disease",
         "Frontotemporal Dementia (FTD)",
-        "Tau Seeding"
+        "Tau Seeding",
+        "EIF4G2",
+        "MYT1",
+        "NSD1",
+        "NCOA6"
     ],
     "Autophagy": [
         "MTOR",
@@ -26,7 +30,8 @@ clusters_data = {
         "ELOB",
         "ELOC",
         "CRL5SOCS4 Complex",
-        "CHIP"
+        "CHIP",
+        "FBXW7"
     ],
     "UFMylation": [
         "UFC1",
@@ -75,128 +80,903 @@ clusters_data = {
     "Protein Clearance": [
         "Autophagy",
         "Ubiquitin/Proteasome System"
+    ],
+    "mTOR Pathway": [
+        "TSC1",
+        "TSC2",
+        "RHEB",
+        "pS6"
     ]
 }
+
 nodes_data = [
-    # Genes
-    {"id": "MAPT", "type": "gene", "cluster": "Tauopathy", "size": 3.22},           # ~25 mentions: ln(25)=3.22
-    {"id": "METTL14", "type": "gene", "cluster": "Tauopathy", "size": 1.10},         # ~3 mentions: ln(3)=1.10
-    {"id": "METTL3", "type": "gene", "cluster": "Tauopathy", "size": 1.10},          # ~3 mentions
-    {"id": "MTOR", "type": "gene", "cluster": "Autophagy", "size": 1.61},            # ~5 mentions: ln(5)=1.61
-    {"id": "CUL5", "type": "gene", "cluster": "Ubiquitin/Proteasome", "size": 2.71},   # ~15 mentions: ln(15)=2.71
-    {"id": "SOCS4", "type": "gene", "cluster": "Ubiquitin/Proteasome", "size": 2.30},  # ~10 mentions: ln(10)=2.30
-    {"id": "SOCS5", "type": "gene", "cluster": "Ubiquitin/Proteasome", "size": 1.10},  # ~3 mentions
-    {"id": "ARIH2", "type": "gene", "cluster": "Ubiquitin/Proteasome", "size": 1.39},  # ~4 mentions: ln(4)=1.39
-    {"id": "RNF7", "type": "gene", "cluster": "Ubiquitin/Proteasome", "size": 1.39},   # ~4 mentions
-    {"id": "UFC1", "type": "gene", "cluster": "UFMylation", "size": 0.69},            # ~2 mentions: ln(2)=0.69
-    {"id": "UFM1", "type": "gene", "cluster": "UFMylation", "size": 0.69},            # ~2 mentions
-    {"id": "UFL1", "type": "gene", "cluster": "UFMylation", "size": 0.69},            # ~2 mentions
-    {"id": "UBA5", "type": "gene", "cluster": "UFMylation", "size": 0.69},            # ~2 mentions
-    {"id": "ELOB", "type": "gene", "cluster": "Ubiquitin/Proteasome", "size": 1.10},   # ~3 mentions
-    {"id": "ELOC", "type": "gene", "cluster": "Ubiquitin/Proteasome", "size": 1.10},   # ~3 mentions
-    {"id": "UBE2F", "type": "gene", "cluster": "Neddylation", "size": 0.69},         # ~1 mention → adjusted to ln(2)=0.69
-    {"id": "PSME1", "type": "gene", "cluster": "Proteasome Activation", "size": 0.69}, # ~2 mentions
-    {"id": "PSME2", "type": "gene", "cluster": "Proteasome Activation", "size": 0.69}, # ~2 mentions
-    {"id": "KEAP1", "type": "gene", "cluster": "Oxidative Stress", "size": 0.69},      # ~1 mention
-    {"id": "FECH", "type": "gene", "cluster": "Mitochondrial Function", "size": 0.69}, # ~1 mention
-    {"id": "FH", "type": "gene", "cluster": "Mitochondrial Function", "size": 0.69},   # ~1 mention
-    {"id": "WIPI2", "type": "gene", "cluster": "Autophagy", "size": 0.69},            # ~1 mention
-    {"id": "CTSD", "type": "gene", "cluster": "Autophagy", "size": 0.69},             # ~1 mention
-    {"id": "PSAP", "type": "gene", "cluster": "Lysosomal Function", "size": 0.69},      # ~1 mention
-    {"id": "Nuclear Mitochondrial Genes", "type": "gene group", "cluster": "Mitochondrial Function", "size": 0.69}  # ~1 mention
-]
-
-nodes_data += [
-    # Proteins and Protein Complexes/Fragments
-    {"id": "Tau Protein", "type": "protein", "cluster": "Tauopathy", "size": 3.40},            # ~30 mentions: ln(30)=3.40
-    {"id": "Tau Oligomers", "type": "protein", "cluster": "Tauopathy", "size": 2.71},            # ~15 mentions: ln(15)=2.71
-    {"id": "CRL5SOCS4 Complex", "type": "protein complex", "cluster": "Ubiquitin/Proteasome", "size": 2.30},  # ~10 mentions: ln(10)=2.30
-    {"id": "CHIP", "type": "protein", "cluster": "Ubiquitin/Proteasome", "size": 1.39},            # ~4 mentions
-    {"id": "PA28", "type": "protein complex", "cluster": "Proteasome Activation", "size": 0.69},   # ~2 mentions
-    {"id": "Tau 25kD Fragment", "type": "protein fragment", "cluster": "Tauopathy", "size": 2.08}, # ~8 mentions: ln(8)=2.08
-    {"id": "N-224 Tau Fragment", "type": "protein fragment", "cluster": "Tauopathy", "size": 0.69}, # ~2 mentions
-    {"id": "Calpain", "type": "protein", "cluster": "Protease", "size": 0.69}                       # ~1 mention
-]
-
-nodes_data += [
-    # Diseases
-    {"id": "Alzheimer's Disease", "type": "disease", "cluster": "Tauopathy", "size": 2.71},         # ~15 mentions: ln(15)=2.71
-    {"id": "Frontotemporal Dementia (FTD)", "type": "disease", "cluster": "Tauopathy", "size": 2.30}  # ~10 mentions: ln(10)=2.30
-]
-
-nodes_data += [
-    # Pathways and Processes
-    {"id": "Oxidative Phosphorylation", "type": "pathway", "cluster": "Mitochondrial Function", "size": 1.61},  # ~5 mentions: ln(5)=1.61
-    {"id": "Electron Transport Chain", "type": "pathway", "cluster": "Mitochondrial Function", "size": 1.39},   # ~4 mentions: ln(4)=1.39
-    {"id": "Autophagy", "type": "pathway", "cluster": "Protein Clearance", "size": 2.30},                         # ~10 mentions: ln(10)=2.30
-    {"id": "Ubiquitin/Proteasome System", "type": "pathway", "cluster": "Protein Clearance", "size": 2.08},       # ~8 mentions: ln(8)=2.08
-    {"id": "mTOR Signaling", "type": "pathway", "cluster": "Autophagy", "size": 1.79},                            # ~6 mentions: ln(6)=1.79
-    {"id": "GPI-anchor Biosynthesis", "type": "pathway", "cluster": "Protein Modification", "size": 1.10},         # ~3 mentions: ln(3)=1.10
-    {"id": "UFMylation", "type": "pathway", "cluster": "Protein Modification", "size": 1.61},                      # ~5 mentions: ln(5)=1.61
-    {"id": "RNA Transport", "type": "pathway", "cluster": "Gene Expression", "size": 1.10},                          # ~3 mentions: ln(3)=1.10
-    {"id": "TCA Cycle", "type": "pathway", "cluster": "Mitochondrial Function", "size": 0.69},                       # ~2 mentions: ln(2)=0.69
-    {"id": "AMPK Signaling", "type": "pathway", "cluster": "Metabolic Regulation", "size": 0.69},                    # ~2 mentions
-    {"id": "RNA Degradation", "type": "pathway", "cluster": "Gene Expression", "size": 0.69},                        # ~2 mentions
-    {"id": "Neddylation", "type": "pathway", "cluster": "Protein Modification", "size": 1.39},                       # ~4 mentions: ln(4)=1.39
-    {"id": "ROS Response", "type": "pathway", "cluster": "Oxidative Stress", "size": 1.79},                          # ~6 mentions: ln(6)=1.79
-    {"id": "Tau Seeding", "type": "process", "cluster": "Tauopathy", "size": 1.10},                                # ~3 mentions: ln(3)=1.10
-    {"id": "Neuro-immune Axis", "type": "pathway", "cluster": "Immune Regulation", "size": 0.69}                     # ~2 mentions: ln(2)=0.69
+    {
+        "id": "MAPT",
+        "type": "gene",
+        "cluster": "Tauopathy",
+        "size": 3.22
+    },
+    {
+        "id": "METTL14",
+        "type": "gene",
+        "cluster": "Tauopathy",
+        "size": 1.1
+    },
+    {
+        "id": "METTL3",
+        "type": "gene",
+        "cluster": "Tauopathy",
+        "size": 1.1
+    },
+    {
+        "id": "MTOR",
+        "type": "gene",
+        "cluster": "Autophagy",
+        "size": 1.61
+    },
+    {
+        "id": "CUL5",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 2.71
+    },
+    {
+        "id": "SOCS4",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 2.3
+    },
+    {
+        "id": "SOCS5",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 1.1
+    },
+    {
+        "id": "ARIH2",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 1.39
+    },
+    {
+        "id": "RNF7",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 1.39
+    },
+    {
+        "id": "UFC1",
+        "type": "gene",
+        "cluster": "UFMylation",
+        "size": 0.69
+    },
+    {
+        "id": "UFM1",
+        "type": "gene",
+        "cluster": "UFMylation",
+        "size": 0.69
+    },
+    {
+        "id": "UFL1",
+        "type": "gene",
+        "cluster": "UFMylation",
+        "size": 0.69
+    },
+    {
+        "id": "UBA5",
+        "type": "gene",
+        "cluster": "UFMylation",
+        "size": 0.69
+    },
+    {
+        "id": "ELOB",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 1.1
+    },
+    {
+        "id": "ELOC",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 1.1
+    },
+    {
+        "id": "UBE2F",
+        "type": "gene",
+        "cluster": "Neddylation",
+        "size": 0.69
+    },
+    {
+        "id": "PSME1",
+        "type": "gene",
+        "cluster": "Proteasome Activation",
+        "size": 0.69
+    },
+    {
+        "id": "PSME2",
+        "type": "gene",
+        "cluster": "Proteasome Activation",
+        "size": 0.69
+    },
+    {
+        "id": "KEAP1",
+        "type": "gene",
+        "cluster": "Oxidative Stress",
+        "size": 0.69
+    },
+    {
+        "id": "FECH",
+        "type": "gene",
+        "cluster": "Mitochondrial Function",
+        "size": 0.69
+    },
+    {
+        "id": "FH",
+        "type": "gene",
+        "cluster": "Mitochondrial Function",
+        "size": 0.69
+    },
+    {
+        "id": "WIPI2",
+        "type": "gene",
+        "cluster": "Autophagy",
+        "size": 0.69
+    },
+    {
+        "id": "CTSD",
+        "type": "gene",
+        "cluster": "Autophagy",
+        "size": 0.69
+    },
+    {
+        "id": "PSAP",
+        "type": "gene",
+        "cluster": "Lysosomal Function",
+        "size": 0.69
+    },
+    {
+        "id": "Nuclear Mitochondrial Genes",
+        "type": "gene group",
+        "cluster": "Mitochondrial Function",
+        "size": 0.69
+    },
+    {
+        "id": "Tau Protein",
+        "type": "protein",
+        "cluster": "Tauopathy",
+        "size": 3.4
+    },
+    {
+        "id": "Tau Oligomers",
+        "type": "protein",
+        "cluster": "Tauopathy",
+        "size": 2.71
+    },
+    {
+        "id": "CRL5SOCS4 Complex",
+        "type": "protein complex",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 2.3
+    },
+    {
+        "id": "CHIP",
+        "type": "protein",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 1.39
+    },
+    {
+        "id": "PA28",
+        "type": "protein complex",
+        "cluster": "Proteasome Activation",
+        "size": 0.69
+    },
+    {
+        "id": "Tau 25kD Fragment",
+        "type": "protein fragment",
+        "cluster": "Tauopathy",
+        "size": 2.08
+    },
+    {
+        "id": "N-224 Tau Fragment",
+        "type": "protein fragment",
+        "cluster": "Tauopathy",
+        "size": 0.69
+    },
+    {
+        "id": "Calpain",
+        "type": "protein",
+        "cluster": "Protease",
+        "size": 0.69
+    },
+    {
+        "id": "Alzheimer's Disease",
+        "type": "disease",
+        "cluster": "Tauopathy",
+        "size": 2.71
+    },
+    {
+        "id": "Frontotemporal Dementia (FTD)",
+        "type": "disease",
+        "cluster": "Tauopathy",
+        "size": 2.3
+    },
+    {
+        "id": "Oxidative Phosphorylation",
+        "type": "pathway",
+        "cluster": "Mitochondrial Function",
+        "size": 1.61
+    },
+    {
+        "id": "Electron Transport Chain",
+        "type": "pathway",
+        "cluster": "Mitochondrial Function",
+        "size": 1.39
+    },
+    {
+        "id": "Autophagy",
+        "type": "pathway",
+        "cluster": "Protein Clearance",
+        "size": 2.3
+    },
+    {
+        "id": "Ubiquitin/Proteasome System",
+        "type": "pathway",
+        "cluster": "Protein Clearance",
+        "size": 2.08
+    },
+    {
+        "id": "mTOR Signaling",
+        "type": "pathway",
+        "cluster": "Autophagy",
+        "size": 1.79
+    },
+    {
+        "id": "GPI-anchor Biosynthesis",
+        "type": "pathway",
+        "cluster": "Protein Modification",
+        "size": 1.1
+    },
+    {
+        "id": "UFMylation",
+        "type": "pathway",
+        "cluster": "Protein Modification",
+        "size": 1.61
+    },
+    {
+        "id": "RNA Transport",
+        "type": "pathway",
+        "cluster": "Gene Expression",
+        "size": 1.1
+    },
+    {
+        "id": "TCA Cycle",
+        "type": "pathway",
+        "cluster": "Mitochondrial Function",
+        "size": 0.69
+    },
+    {
+        "id": "AMPK Signaling",
+        "type": "pathway",
+        "cluster": "Metabolic Regulation",
+        "size": 0.69
+    },
+    {
+        "id": "RNA Degradation",
+        "type": "pathway",
+        "cluster": "Gene Expression",
+        "size": 0.69
+    },
+    {
+        "id": "Neddylation",
+        "type": "pathway",
+        "cluster": "Protein Modification",
+        "size": 1.39
+    },
+    {
+        "id": "ROS Response",
+        "type": "pathway",
+        "cluster": "Oxidative Stress",
+        "size": 1.79
+    },
+    {
+        "id": "Tau Seeding",
+        "type": "process",
+        "cluster": "Tauopathy",
+        "size": 1.1
+    },
+    {
+        "id": "Neuro-immune Axis",
+        "type": "pathway",
+        "cluster": "Immune Regulation",
+        "size": 0.69
+    },
+    {
+        "id": "TSC1",
+        "type": "gene",
+        "cluster": "mTOR Pathway",
+        "size": 1.1
+    },
+    {
+        "id": "Progressive Supranuclear Palsy",
+        "type": "disease",
+        "cluster": "Tauopathy",
+        "size": 0.69
+    },
+    {
+        "id": "Corticobasal Degeneration",
+        "type": "disease",
+        "cluster": "Tauopathy",
+        "size": 0.69
+    },
+    {
+        "id": "Pick\u2019s Disease",
+        "type": "disease",
+        "cluster": "Tauopathy",
+        "size": 0.69
+    },
+    {
+        "id": "FTDP-17",
+        "type": "disease",
+        "cluster": "Tauopathy",
+        "size": 0.69
+    },
+    {
+        "id": "Chromatin Modification",
+        "type": "pathway",
+        "cluster": "Chromatin Modification",
+        "size": 0.69
+    },
+    {
+        "id": "SH-SY5Y cell line",
+        "type": "cell line",
+        "size": 1.61
+    },
+    {
+        "id": "PC1",
+        "type": "cell line clone",
+        "size": 1.1
+    },
+    {
+        "id": "SC2",
+        "type": "cell line clone",
+        "size": 1.1
+    },
+    {
+        "id": "Cas9",
+        "type": "protein",
+        "size": 1.1
+    },
+    {
+        "id": "SP70 antibody",
+        "type": "reagent",
+        "size": 0.69
+    },
+    {
+        "id": "gRNA MAPT-1",
+        "type": "reagent",
+        "size": 0.69
+    },
+    {
+        "id": "gRNA MAPT-2",
+        "type": "reagent",
+        "size": 0.69
+    },
+    {
+        "id": "FACS sorted low tau population",
+        "type": "cell population",
+        "size": 0.69
+    },
+    {
+        "id": "EIF4G2",
+        "type": "gene",
+        "cluster": "Tauopathy",
+        "size": 1.0
+    },
+    {
+        "id": "MYT1",
+        "type": "gene",
+        "cluster": "Tauopathy",
+        "size": 1.0
+    },
+    {
+        "id": "NSD1",
+        "type": "gene",
+        "cluster": "Tauopathy",
+        "size": 1.0
+    },
+    {
+        "id": "FBXW7",
+        "type": "gene",
+        "cluster": "Ubiquitin/Proteasome",
+        "size": 1.0
+    },
+    {
+        "id": "NCOA6",
+        "type": "gene",
+        "cluster": "Tauopathy",
+        "size": 1.0
+    },
+    {
+        "id": "TSC2",
+        "type": "gene",
+        "cluster": "mTOR Pathway",
+        "size": 1.1
+    },
+    {
+        "id": "RHEB",
+        "type": "gene",
+        "cluster": "mTOR Pathway",
+        "size": 0.8
+    },
+    {
+        "id": "pS6",
+        "type": "protein",
+        "cluster": "mTOR Pathway",
+        "size": 0.8
+    }
 ]
 
 edges_data = [
-    # Gene–Protein and Protein Complex Relationships
-    {"source": "MAPT", "target": "Tau Protein", "relation": "encodes", "score": 0.99},
-    {"source": "CUL5", "target": "Tau Protein", "relation": "ubiquitinates", "score": 0.75},
-    {"source": "SOCS4", "target": "Tau Protein", "relation": "recruits for ubiquitination", "score": 0.70},
-    {"source": "SOCS5", "target": "Tau Protein", "relation": "potential adaptor", "score": 0.65},
-    {"source": "ARIH2", "target": "Tau Protein", "relation": "initiates monoubiquitination", "score": 0.68},
-    {"source": "RNF7", "target": "CUL5", "relation": "stabilizes complex", "score": 0.85},
-    {"source": "CHIP", "target": "Tau Protein", "relation": "ubiquitinates", "score": 0.80},
-    
-    # Protein Complex Assembly
-    {"source": "CUL5", "target": "CRL5SOCS4 Complex", "relation": "forms part of", "score": 0.95},
-    {"source": "SOCS4", "target": "CRL5SOCS4 Complex", "relation": "component of", "score": 0.90},
-    {"source": "ELOB", "target": "CRL5SOCS4 Complex", "relation": "scaffold component", "score": 0.95},
-    {"source": "ELOC", "target": "CRL5SOCS4 Complex", "relation": "scaffold component", "score": 0.95},
-    
-    # UFMylation Pathway Interactions
-    {"source": "UFC1", "target": "UFM1", "relation": "conjugates", "score": 0.87},
-    {"source": "UFL1", "target": "UFM1", "relation": "ligase activity", "score": 0.80},
-    {"source": "UBA5", "target": "UFM1", "relation": "activates", "score": 0.78},
-    
-    # Neddylation and Proteasome Activation
-    {"source": "UBE2F", "target": "CUL5", "relation": "mediates neddylation", "score": 0.80},
-    {"source": "PSME1", "target": "PA28", "relation": "forms subunit", "score": 0.75},
-    {"source": "PSME2", "target": "PA28", "relation": "forms subunit", "score": 0.75},
-    
-    # Pathway-Level Relationships Affecting Tau Dynamics
-    {"source": "MTOR", "target": "Autophagy", "relation": "negatively regulates", "score": 0.90},
-    {"source": "Autophagy", "target": "Tau Protein", "relation": "clears", "score": 0.80},
-    {"source": "Ubiquitin/Proteasome System", "target": "Tau Protein", "relation": "degrades", "score": 0.85},
-    {"source": "Oxidative Phosphorylation", "target": "Tau Oligomers", "relation": "inhibition increases", "score": 0.85},
-    {"source": "Electron Transport Chain", "target": "ROS Response", "relation": "generates", "score": 0.90},
-    {"source": "ROS Response", "target": "Tau 25kD Fragment", "relation": "induces formation", "score": 0.85},
-    {"source": "Neddylation", "target": "CRL5SOCS4 Complex", "relation": "activates", "score": 0.85},
-    
-    # Disease Associations
-    {"source": "MAPT", "target": "Frontotemporal Dementia (FTD)", "relation": "mutations cause", "score": 0.88},
-    {"source": "Tau Protein", "target": "Alzheimer's Disease", "relation": "aggregates in", "score": 0.92},
-    
-    # Additional Mitochondrial and Oxidative Stress Interactions
-    {"source": "KEAP1", "target": "ROS Response", "relation": "regulates oxidative stress", "score": 0.65},
-    {"source": "FECH", "target": "Electron Transport Chain", "relation": "supports mitochondrial function", "score": 0.60},
-    {"source": "FH", "target": "Electron Transport Chain", "relation": "supports mitochondrial function", "score": 0.60},
-    {"source": "WIPI2", "target": "Autophagy", "relation": "facilitates", "score": 0.70},
-    {"source": "CTSD", "target": "Autophagy", "relation": "mediates lysosomal degradation", "score": 0.70},
-    {"source": "PSAP", "target": "Autophagy", "relation": "supports lysosomal function", "score": 0.70},
-    
-    # Relationships from Secondary Screens and Discussion
-    {"source": "UFMylation", "target": "Tau Seeding", "relation": "strongly modulates", "score": 0.90},
-    {"source": "Nuclear Mitochondrial Genes", "target": "Tau Seeding", "relation": "negatively modulates", "score": 0.80},
-    {"source": "CRL5SOCS4 Complex", "target": "Tau Protein", "relation": "controls soma-specific degradation", "score": 0.80},
-    {"source": "CUL5", "target": "Alzheimer's Disease", "relation": "associated with neuronal resilience", "score": 0.70},
-    {"source": "CUL5", "target": "Neuro-immune Axis", "relation": "may modulate", "score": 0.65},
-    {"source": "Calpain", "target": "N-224 Tau Fragment", "relation": "produces", "score": 0.90},
-    {"source": "N-224 Tau Fragment", "target": "Alzheimer's Disease", "relation": "serves as biomarker", "score": 0.85},
-    {"source": "ROS Response", "target": "Tau Protein", "relation": "oxidizes", "score": 0.70}
+    {
+        "source": "MAPT",
+        "target": "Tau Protein",
+        "relation": "encodes",
+        "score": 0.99
+    },
+    {
+        "source": "CUL5",
+        "target": "Tau Protein",
+        "relation": "ubiquitinates",
+        "score": 0.75
+    },
+    {
+        "source": "SOCS4",
+        "target": "Tau Protein",
+        "relation": "recruits for ubiquitination",
+        "score": 0.7
+    },
+    {
+        "source": "SOCS5",
+        "target": "Tau Protein",
+        "relation": "potential adaptor",
+        "score": 0.65
+    },
+    {
+        "source": "ARIH2",
+        "target": "Tau Protein",
+        "relation": "initiates monoubiquitination",
+        "score": 0.68
+    },
+    {
+        "source": "RNF7",
+        "target": "CUL5",
+        "relation": "stabilizes complex",
+        "score": 0.85
+    },
+    {
+        "source": "CHIP",
+        "target": "Tau Protein",
+        "relation": "ubiquitinates",
+        "score": 0.8
+    },
+    {
+        "source": "CUL5",
+        "target": "CRL5SOCS4 Complex",
+        "relation": "forms part of",
+        "score": 0.95
+    },
+    {
+        "source": "SOCS4",
+        "target": "CRL5SOCS4 Complex",
+        "relation": "component of",
+        "score": 0.9
+    },
+    {
+        "source": "ELOB",
+        "target": "CRL5SOCS4 Complex",
+        "relation": "scaffold component",
+        "score": 0.95
+    },
+    {
+        "source": "ELOC",
+        "target": "CRL5SOCS4 Complex",
+        "relation": "scaffold component",
+        "score": 0.95
+    },
+    {
+        "source": "UFC1",
+        "target": "UFM1",
+        "relation": "conjugates",
+        "score": 0.87
+    },
+    {
+        "source": "UFL1",
+        "target": "UFM1",
+        "relation": "ligase activity",
+        "score": 0.8
+    },
+    {
+        "source": "UBA5",
+        "target": "UFM1",
+        "relation": "activates",
+        "score": 0.78
+    },
+    {
+        "source": "UBE2F",
+        "target": "CUL5",
+        "relation": "mediates neddylation",
+        "score": 0.8
+    },
+    {
+        "source": "PSME1",
+        "target": "PA28",
+        "relation": "forms subunit",
+        "score": 0.75
+    },
+    {
+        "source": "PSME2",
+        "target": "PA28",
+        "relation": "forms subunit",
+        "score": 0.75
+    },
+    {
+        "source": "MTOR",
+        "target": "Autophagy",
+        "relation": "negatively regulates",
+        "score": 0.9
+    },
+    {
+        "source": "Autophagy",
+        "target": "Tau Protein",
+        "relation": "clears",
+        "score": 0.8
+    },
+    {
+        "source": "Ubiquitin/Proteasome System",
+        "target": "Tau Protein",
+        "relation": "degrades",
+        "score": 0.85
+    },
+    {
+        "source": "Oxidative Phosphorylation",
+        "target": "Tau Oligomers",
+        "relation": "inhibition increases",
+        "score": 0.85
+    },
+    {
+        "source": "Electron Transport Chain",
+        "target": "ROS Response",
+        "relation": "generates",
+        "score": 0.9
+    },
+    {
+        "source": "ROS Response",
+        "target": "Tau 25kD Fragment",
+        "relation": "induces formation",
+        "score": 0.85
+    },
+    {
+        "source": "Neddylation",
+        "target": "CRL5SOCS4 Complex",
+        "relation": "activates",
+        "score": 0.85
+    },
+    {
+        "source": "MAPT",
+        "target": "Frontotemporal Dementia (FTD)",
+        "relation": "mutations cause",
+        "score": 0.88
+    },
+    {
+        "source": "Tau Protein",
+        "target": "Alzheimer's Disease",
+        "relation": "aggregates in",
+        "score": 0.92
+    },
+    {
+        "source": "KEAP1",
+        "target": "ROS Response",
+        "relation": "regulates oxidative stress",
+        "score": 0.65
+    },
+    {
+        "source": "FECH",
+        "target": "Electron Transport Chain",
+        "relation": "supports mitochondrial function",
+        "score": 0.6
+    },
+    {
+        "source": "FH",
+        "target": "Electron Transport Chain",
+        "relation": "supports mitochondrial function",
+        "score": 0.6
+    },
+    {
+        "source": "WIPI2",
+        "target": "Autophagy",
+        "relation": "facilitates",
+        "score": 0.7
+    },
+    {
+        "source": "CTSD",
+        "target": "Autophagy",
+        "relation": "mediates lysosomal degradation",
+        "score": 0.7
+    },
+    {
+        "source": "PSAP",
+        "target": "Autophagy",
+        "relation": "supports lysosomal function",
+        "score": 0.7
+    },
+    {
+        "source": "TSC1",
+        "target": "Tau Protein",
+        "relation": "negatively regulates",
+        "score": 0.9
+    },
+    {
+        "source": "TSC1",
+        "target": "mTOR Signaling",
+        "relation": "component of",
+        "score": 0.9
+    },
+    {
+        "source": "Chromatin Modification",
+        "target": "Tau Protein",
+        "relation": "modulates expression",
+        "score": 0.8
+    },
+    {
+        "source": "Tau Protein",
+        "target": "Progressive Supranuclear Palsy",
+        "relation": "aggregates in",
+        "score": 0.88
+    },
+    {
+        "source": "Tau Protein",
+        "target": "Corticobasal Degeneration",
+        "relation": "aggregates in",
+        "score": 0.88
+    },
+    {
+        "source": "Tau Protein",
+        "target": "Pick\u2019s Disease",
+        "relation": "aggregates in",
+        "score": 0.88
+    },
+    {
+        "source": "MAPT",
+        "target": "FTDP-17",
+        "relation": "mutations cause",
+        "score": 0.88
+    },
+    {
+        "source": "gRNA MAPT-1",
+        "target": "MAPT",
+        "relation": "targets",
+        "score": 0.85
+    },
+    {
+        "source": "gRNA MAPT-2",
+        "target": "MAPT",
+        "relation": "targets",
+        "score": 0.75
+    },
+    {
+        "source": "gRNA MAPT-1",
+        "target": "Tau Protein",
+        "relation": "reduces levels",
+        "score": 0.85
+    },
+    {
+        "source": "gRNA MAPT-2",
+        "target": "Tau Protein",
+        "relation": "reduces levels",
+        "score": 0.75
+    },
+    {
+        "source": "SH-SY5Y cell line",
+        "target": "Tau Protein",
+        "relation": "expresses",
+        "score": 0.9
+    },
+    {
+        "source": "SH-SY5Y cell line",
+        "target": "Cas9",
+        "relation": "stably expresses",
+        "score": 0.95
+    },
+    {
+        "source": "PC1",
+        "target": "SH-SY5Y cell line",
+        "relation": "derived from",
+        "score": 1.0
+    },
+    {
+        "source": "SC2",
+        "target": "PC1",
+        "relation": "clone of",
+        "score": 1.0
+    },
+    {
+        "source": "SP70 antibody",
+        "target": "Tau Protein",
+        "relation": "detects",
+        "score": 0.9
+    },
+    {
+        "source": "SP70 antibody",
+        "target": "FACS sorted low tau population",
+        "relation": "identifies",
+        "score": 0.9
+    },
+    {
+        "source": "gRNA MAPT-1",
+        "target": "FACS sorted low tau population",
+        "relation": "enriches",
+        "score": 0.85
+    },
+    {
+        "source": "gRNA MAPT-2",
+        "target": "FACS sorted low tau population",
+        "relation": "enriches",
+        "score": 0.75
+    },
+    {
+        "source": "Cas9",
+        "target": "gRNA MAPT-1",
+        "relation": "mediates editing with",
+        "score": 0.9
+    },
+    {
+        "source": "Cas9",
+        "target": "gRNA MAPT-2",
+        "relation": "mediates editing with",
+        "score": 0.9
+    },
+    {
+        "source": "UFMylation",
+        "target": "Tau Seeding",
+        "relation": "strongly modulates",
+        "score": 0.9
+    },
+    {
+        "source": "Nuclear Mitochondrial Genes",
+        "target": "Tau Seeding",
+        "relation": "negatively modulates",
+        "score": 0.8
+    },
+    {
+        "source": "CRL5SOCS4 Complex",
+        "target": "Tau Protein",
+        "relation": "controls soma-specific degradation",
+        "score": 0.8
+    },
+    {
+        "source": "CUL5",
+        "target": "Alzheimer's Disease",
+        "relation": "associated with neuronal resilience",
+        "score": 0.7
+    },
+    {
+        "source": "CUL5",
+        "target": "Neuro-immune Axis",
+        "relation": "may modulate",
+        "score": 0.65
+    },
+    {
+        "source": "Calpain",
+        "target": "N-224 Tau Fragment",
+        "relation": "produces",
+        "score": 0.9
+    },
+    {
+        "source": "N-224 Tau Fragment",
+        "target": "Alzheimer's Disease",
+        "relation": "serves as biomarker",
+        "score": 0.85
+    },
+    {
+        "source": "ROS Response",
+        "target": "Tau Protein",
+        "relation": "oxidizes",
+        "score": 0.7
+    },
+    {
+        "source": "EIF4G2",
+        "target": "Tau Protein",
+        "relation": "positively regulates",
+        "score": 0.81
+    },
+    {
+        "source": "MYT1",
+        "target": "Tau Protein",
+        "relation": "positively regulates",
+        "score": 0.79
+    },
+    {
+        "source": "NSD1",
+        "target": "Tau Protein",
+        "relation": "positively regulates",
+        "score": 0.85
+    },
+    {
+        "source": "NSD1",
+        "target": "Chromatin Modification",
+        "relation": "modulates",
+        "score": 0.85
+    },
+    {
+        "source": "FBXW7",
+        "target": "Tau Protein",
+        "relation": "promotes degradation",
+        "score": 0.83
+    },
+    {
+        "source": "FBXW7",
+        "target": "CUL5",
+        "relation": "functionally interacts",
+        "score": 0.8
+    },
+    {
+        "source": "NCOA6",
+        "target": "Tau Protein",
+        "relation": "negatively regulates",
+        "score": 0.8
+    },
+    {
+        "source": "TSC2",
+        "target": "Tau Protein",
+        "relation": "negatively regulates",
+        "score": 0.88
+    },
+    {
+        "source": "TSC1",
+        "target": "TSC2",
+        "relation": "forms complex with",
+        "score": 0.95
+    },
+    {
+        "source": "TSC2",
+        "target": "TSC1",
+        "relation": "forms complex with",
+        "score": 0.95
+    },
+    {
+        "source": "TSC1",
+        "target": "RHEB",
+        "relation": "inhibits",
+        "score": 0.9
+    },
+    {
+        "source": "TSC2",
+        "target": "RHEB",
+        "relation": "inhibits",
+        "score": 0.9
+    },
+    {
+        "source": "RHEB",
+        "target": "MTOR",
+        "relation": "activates",
+        "score": 0.9
+    },
+    {
+        "source": "MTOR",
+        "target": "pS6",
+        "relation": "phosphorylates",
+        "score": 0.9
+    },
+    {
+        "source": "TSC2",
+        "target": "Tau Oligomers",
+        "relation": "modulates aggregation",
+        "score": 0.6
+    },
+    {
+        "source": "NSD1",
+        "target": "NCOA6",
+        "relation": "co-regulates",
+        "score": 0.75
+    }
 ]
