@@ -1,28 +1,24 @@
 import streamlit as st
-# Set page config must be the first Streamlit command
-st.set_page_config(layout="wide", page_title="Biomedical Knowledge Graph")
-from stats import *
+import json
+import math
 from pyvis.network import Network
 import streamlit.components.v1 as components
-# from network_analyzer import NetworkAnalyzer
-import json
-import pandas as pd
-import networkx as nx
-import numpy as np
-from IPython.display import HTML, display
-import colorsys
-import re
 from deb_data2 import *
+
+# Set page config must be the first Streamlit command
+st.set_page_config(layout="wide", page_title="Biomedical Knowledge Graph")
+
 # Color scheme
 color_scheme = {
-    "gene": "#1f77b4",        
-    "gene group": "#1f77b4",  
-    "protein": "#2ca02c",    
-    "protein complex": "#2ca02c",  
-    "protein fragment": "#2ca02c", 
-    "disease": "#d62728",     
-    "pathway": "#9467bd",     
-    "process": "#9467bd"      }
+    "gene": "#1f77b4",        # Blue
+    "gene group": "#1f77b4",  # Same blue as gene
+    "protein": "#2ca02c",     # Green
+    "protein complex": "#2ca02c",  # Same green as protein
+    "protein fragment": "#2ca02c", # Same green as protein
+    "disease": "#d62728",     # Red
+    "pathway": "#9467bd",     # Purple
+    "process": "#9467bd"      # Same purple as pathway
+}
 
 # Utility functions
 def hex_to_rgb(hex_color):
@@ -30,43 +26,43 @@ def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
 
-
 def rgb_to_rgba(rgb, alpha):
     """Convert RGB tuple to RGBA string."""
     return f"rgba{rgb + (alpha,)}"
 
-
-def get_node_cluster(node_id, clusters_data):
-    """Get cluster for a node."""
-    for cluster_name, nodes in clusters_data.items():
-        if node_id in nodes:
-            return cluster_name
-    return "Other"
-
-
-
-
-# Define clusters
-# Define updated clusters
-
+def get_node_relationships(node_id):
+    """Get all relationships for a specific node."""
+    relationships = []
+    for edge in edges_data:
+        if edge["source"] == node_id:
+            relationships.append({
+                "related_node": edge["target"],
+                "relation": edge["relation"],
+                "score": edge["score"],
+                "direction": "outgoing"
+            })
+        elif edge["target"] == node_id:
+            relationships.append({
+                "related_node": edge["source"],
+                "relation": edge["relation"],
+                "score": edge["score"],
+                "direction": "incoming"
+            })
+    return relationships
 
 def create_network(selected_cluster=None):
     """Create and configure the network visualization."""
-    # Create Pyvis network
     net = Network(height="800px", width="100%", bgcolor="#ffffff", font_color="black")
     net.force_atlas_2based()
 
     # Add nodes
     for node in nodes_data:
         color = color_scheme[node["type"]]
-        # Base size is determined by the 'size' parameter in data
-        # Multiply by 10 to make the differences more visible
         base_size = node["size"] * 10
         
         if selected_cluster:
             is_in_cluster = node["cluster"] == selected_cluster
             if is_in_cluster:
-                # For nodes in selected cluster, increase size by 50%
                 size = base_size * 1.5
             else:
                 size = base_size
@@ -75,11 +71,18 @@ def create_network(selected_cluster=None):
         else:
             size = base_size
 
+        # Add onClick event for nodes
+        title = (f"Type: {node['type']}<br>"
+                f"Cluster: {node['cluster']}<br>"
+                f"Size: {node['size']:.2f}<br>"
+                f"ID: {node['id']}<br><br>"
+                f"Ctrl+Click to download node data")
+
         net.add_node(
             node["id"],
             label=node["id"],
             color=color,
-            title=f"Type: {node['type']}<br>Cluster: {node['cluster']}<br>Size: {node['size']:.2f}<br>ID: {node['id']}",
+            title=title,
             size=size
         )
 
@@ -111,7 +114,7 @@ def create_network(selected_cluster=None):
             color=edge_color
         )
 
-    # Physics options
+    # Configure physics
     net.set_options("""
     var options = {
         "physics": {
@@ -128,39 +131,51 @@ def create_network(selected_cluster=None):
                 "enabled": true,
                 "iterations": 1000
             }
+        },
+        "interaction": {
+            "hover": true,
+            "tooltipDelay": 200
         }
     }
     """)
     
-    return net  
+    return net
 
-def display_network_stats(nodes_data, edges_data, selected_cluster):
-    """Display network statistics in the sidebar."""
-    st.sidebar.title("Network Statistics")
-
-    total_nodes = len(nodes_data)
-    total_edges = len(edges_data)
-    st.sidebar.write(f"Total Nodes: {total_nodes}")
-    st.sidebar.write(f"Total Edges: {total_edges}")
-
-    # Fixed node type counting
-    node_types_count = {}
-    for node in nodes_data:
-        if node["type"] in node_types_count:
-            node_types_count[node["type"]] += 1
-        else:
-            node_types_count[node["type"]] = 1
-
-    st.sidebar.write("\nNode Types:")
-    for node_type, count in node_types_count.items():
-        percentage = (count / total_nodes) * 100
-        st.sidebar.write(f"{node_type.capitalize()}: {count} ({percentage:.1f}%)")
-
+def handle_node_selection():
+    """Handle selection and data download for nodes."""
+    # Create a container for the download button
+    download_container = st.sidebar.container()
+    
+    # Get selected node from session state
+    selected_node = st.session_state.get('selected_node', None)
+    
+    if selected_node:
+        node_data = next((n for n in nodes_data if n["id"] == selected_node), None)
+        if node_data:
+            relationships = get_node_relationships(selected_node)
+            
+            # Prepare data for download
+            download_data = {
+                "node_info": node_data,
+                "relationships": relationships
+            }
+            
+            # Convert to JSON
+            json_data = json.dumps(download_data, indent=2)
+            
+            # Create download button
+            download_container.download_button(
+                label=f"Download {selected_node} Data",
+                data=json_data,
+                file_name=f"{selected_node}_data.json",
+                mime="application/json"
+            )
 
 def main():
     """Main application function."""
-    # Initialize network analyzer
-    analyzer = NetworkAnalyzer(nodes_data, edges_data)
+    # Initialize session state for node selection
+    if 'selected_node' not in st.session_state:
+        st.session_state.selected_node = None
 
     # Sidebar controls
     st.sidebar.title("Network Navigation")
@@ -169,111 +184,108 @@ def main():
         ["All"] + list(clusters_data.keys())
     )
 
-    # Create tabs for different views
+    # Download buttons section
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Download Options")
+
+    # Full network download
+    if st.sidebar.button("Download Full Network"):
+        full_net = create_network()
+        full_net.save_graph("network_export_full.html")
+        with open("network_export_full.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        st.sidebar.download_button(
+            label="Save Network HTML",
+            data=html_content,
+            file_name="full_network.html",
+            mime="text/html"
+        )
+
+    # Cluster-specific download
+    if selected_cluster != "All" and st.sidebar.button(f"Download {selected_cluster} Cluster"):
+        cluster_net = create_network(selected_cluster)
+        cluster_net.save_graph("network_export_cluster.html")
+        with open("network_export_cluster.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        st.sidebar.download_button(
+            label="Save Cluster HTML",
+            data=html_content,
+            file_name=f"{selected_cluster.lower()}_network.html",
+            mime="text/html"
+        )
+
+    # Node selection handler
+    handle_node_selection()
+
+    # Main content
     main_tab, stats_tab = st.tabs(["Network Visualization", "Detailed Analysis"])
 
     with main_tab:
         st.title("Biomedical Knowledge Graph Visualization")
-
+        
         # Create and display network
         net = create_network(None if selected_cluster == "All" else selected_cluster)
+        
+        # Add JavaScript event handler for Ctrl+Click
+        net.html = net.html.replace('</head>', '''
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                network.on("click", function(params) {
+                    if (params.nodes.length > 0 && params.event.srcEvent.ctrlKey) {
+                        window.parent.postMessage({
+                            type: "node_selected",
+                            node: params.nodes[0]
+                        }, "*");
+                    }
+                });
+            });
+            </script>
+            </head>
+        ''')
+        
         net.save_graph("network.html")
         with open("network.html", "r", encoding="utf-8") as f:
             html = f.read()
+            
+        # Handle messages from the network visualization
         components.html(html, height=800)
-
-        # Display legend
-        st.write("\n### Node Type Legend")
-        cols = st.columns(4)
-        for i, (node_type, color) in enumerate(color_scheme.items()):
-            with cols[i]:
-                st.markdown(
-                    f'<div style="display: flex; align-items: center;">'
-                    f'<div style="width: 20px; height: 20px; background-color: {color}; '
-                    f'margin-right: 10px; border-radius: 50%;"></div>'
-                    f'<span style="font-weight: 500;">{node_type.capitalize()}</span></div>',
-                    unsafe_allow_html=True
-                )
+        
+        # JavaScript to handle messages
+        st.markdown("""
+            <script>
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'node_selected') {
+                    window.parent.postMessage({
+                        type: 'update_streamlit',
+                        node: event.data.node
+                    }, '*');
+                }
+            });
+            </script>
+        """, unsafe_allow_html=True)
 
     with stats_tab:
-        # Display network statistics based on selection
-        analyzer.display_stats_streamlit(selected_cluster)
-
-    # Enhanced Export functionality
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Export Options")
-
-    export_col1, export_col2 = st.sidebar.columns(2)
-
-    with export_col1:
-        if st.button("Export Full Network"):
-            full_net = create_network(None)  # Create network without highlighting
-            full_net.save_graph("network_export_full.html")
-            with open("network_export_full.html", "r", encoding="utf-8") as f:
-                html_content = f.read()
-            st.download_button(
-                label="Download Full Network",
-                data=html_content,
-                file_name="full_network.html",
-                mime="text/html"
-            )
-
-    with export_col2:
-        if selected_cluster != "All" and st.button("Export Cluster"):
-            # Create network with only the selected cluster
-            cluster_nodes = clusters_data.get(selected_cluster, [])
-            cluster_net = Network(height="750px", width="100%", bgcolor="#ffffff", font_color="black")
-
-            # Add nodes from the selected cluster
-            added_nodes = set()
+        # Display detailed statistics
+        st.write("### Network Statistics")
+        total_nodes = len(nodes_data)
+        total_edges = len(edges_data)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"Total Nodes: {total_nodes}")
+            st.write(f"Total Edges: {total_edges}")
+            
+        with col2:
+            node_types = {}
             for node in nodes_data:
-                if node["id"] in cluster_nodes:
-                    cluster_net.add_node(
-                        node["id"],
-                        label=node["id"],
-                        color=color_scheme[node["type"]],
-                        title=f"Type: {node['type']}<br>Cluster: {node['cluster']}<br>ID: {node['id']}",
-                        size=30
-                    )
-                    added_nodes.add(node["id"])
-
-            # Add edges between nodes in the cluster
-            for edge in edges_data:
-                if edge["source"] in added_nodes and edge["target"] in added_nodes:
-                    cluster_net.add_edge(
-                        edge["source"],
-                        edge["target"],
-                        title=f"Relation: {edge['relation']}<br>Score: {edge['score']:.2f}",
-                        width=edge["score"] * 3,
-                        color="#000000"
-                    )
-
-            # Save and offer download
-            cluster_net.save_graph("network_export_cluster.html")
-            with open("network_export_cluster.html", "r", encoding="utf-8") as f:
-                html_content = f.read()
-            st.download_button(
-                label="Download Cluster Network",
-                data=html_content,
-                file_name=f"{selected_cluster.lower()}_network.html",
-                mime="text/html"
-            )
-
-    # Export statistics as JSON
-    if st.sidebar.button("Export Statistics as JSON"):
-        if selected_cluster == "All":
-            export_stats = analyzer.get_basic_stats()
-        else:
-            export_stats = analyzer.get_cluster_stats(selected_cluster)
-
-        json_stats = json.dumps(export_stats, indent=2)
-        st.sidebar.download_button(
-            label="Download Statistics",
-            data=json_stats,
-            file_name="network_statistics.json",
-            mime="application/json"
-        )
-
+                node_type = node["type"]
+                if node_type in node_types:
+                    node_types[node_type] += 1
+                else:
+                    node_types[node_type] = 1
+            
+            for node_type, count in node_types.items():
+                st.write(f"{node_type.capitalize()}: {count}")
 
 if __name__ == "__main__":
     main()
