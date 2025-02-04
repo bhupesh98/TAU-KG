@@ -131,7 +131,8 @@ def create_network(selected_cluster=None):
         }
     }
     """)
-
+    
+    return net  
 
 def display_network_stats(nodes_data, edges_data, selected_cluster):
     """Display network statistics in the sidebar."""
