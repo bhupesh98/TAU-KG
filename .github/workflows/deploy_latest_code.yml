@@ -1,0 +1,19 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{secrets.HOSTNAME}}
+          username: ${{secrets.USER}}
+          key: ${{secrets.SECRET_KEY}}
+          port: 22
+          script: /home/admin1/deploy-tau-kg.sh
