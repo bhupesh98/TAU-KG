@@ -541,100 +541,125 @@ def initialize_session_state():
         st.session_state.selected_nodes = set()
     if 'last_cluster' not in st.session_state:
         st.session_state.last_cluster = "All"
-
 def main():
     """Main application function."""
     try:
         # Initialize session state
         initialize_session_state()
         
-        # Validate data
-        if not validate_data():
-            st.stop()
+        # Load and clean data
+        global nodes_data, edges_data, clusters_data
+        nodes_data, edges_data, clusters_data = load_data()
         
-        # Check network size
+        if not nodes_data or not edges_data or not clusters_data:
+            st.error("Failed to load data")
+            return
+            
+        # Data validation reporting
+        valid_node_ids = {node["id"] for node in nodes_data}
+        invalid_edges = [
+            edge for edge in edges_data 
+            if edge["source"] not in valid_node_ids or edge["target"] not in valid_node_ids
+        ]
+        if invalid_edges:
+            st.warning(f"Found {len(invalid_edges)} edges with invalid node references")
+            with st.expander("Show invalid edges"):
+                for edge in invalid_edges:
+                    st.write(f"- {edge['source']} -> {edge['target']}: {edge['relation']}")
+        
+        # Remove invalid edges
+        edges_data = [
+            edge for edge in edges_data 
+            if edge["source"] in valid_node_ids and edge["target"] in valid_node_ids
+        ]
+        
+        # Check network size and show performance tips if needed
         handle_large_network()
         
         # Initialize network analyzer
         analyzer = NetworkAnalyzer(nodes_data, edges_data)
 
-        # Sidebar controls
-        st.sidebar.title("Network Navigation")
-        selected_cluster = st.sidebar.selectbox(
-            "Select Cluster to Highlight",
-            ["All"] + list(clusters_data.keys())
-        )
+        # Sidebar organization
+        with st.sidebar:
+            st.title("Network Navigation")
+            
+            # Cluster selection
+            selected_cluster = st.selectbox(
+                "Select Cluster to Highlight",
+                ["All"] + list(clusters_data.keys())
+            )
 
-        # Add help section at the top
-        add_help_section()
+            # Help section
+            add_help_section()
 
-        # Add search functionality
-        add_search_functionality()
+            # Search functionality
+            add_search_functionality()
 
-        # Handle selected nodes
-        handle_selected_nodes()
+            # Handle selected nodes
+            handle_selected_nodes()
 
-        # Display network statistics
-        display_network_stats(nodes_data, edges_data, selected_cluster)
+            # Display network statistics
+            display_network_stats(nodes_data, edges_data, selected_cluster)
 
-        # Export options
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("Export Options")
+            # Export options
+            st.markdown("---")
+            st.subheader("Export Options")
 
-        export_col1, export_col2 = st.sidebar.columns(2)
-
-        with export_col1:
+            # Export full network
             if st.button("Export Full Network"):
                 with st.spinner("Preparing full network..."):
                     full_net = create_network()
-                    full_net.save_graph("network_export_full.html")
-                    content = safe_read_file("network_export_full.html")
-                    if content:
-                        st.download_button(
-                            label="Download Full Network",
-                            data=content,
-                            file_name="full_network.html",
-                            mime="text/html"
-                        )
+                    if full_net:
+                        full_net.save_graph("network_export_full.html")
+                        content = safe_read_file("network_export_full.html")
+                        if content:
+                            st.download_button(
+                                label="Download Full Network",
+                                data=content,
+                                file_name="full_network.html",
+                                mime="text/html"
+                            )
 
-        with export_col2:
-            if selected_cluster != "All" and st.button("Export Cluster"):
-                with st.spinner(f"Preparing {selected_cluster} cluster..."):
-                    cluster_net = create_network(selected_cluster)
-                    cluster_net.save_graph("network_export_cluster.html")
-                    content = safe_read_file("network_export_cluster.html")
-                    if content:
-                        st.download_button(
-                            label="Download Cluster Network",
-                            data=content,
-                            file_name=f"{selected_cluster.lower()}_network.html",
-                            mime="text/html"
-                        )
+            # Export cluster
+            if selected_cluster != "All":
+                if st.button("Export Selected Cluster"):
+                    with st.spinner(f"Preparing {selected_cluster} cluster..."):
+                        cluster_net = create_network(selected_cluster)
+                        if cluster_net:
+                            cluster_net.save_graph("network_export_cluster.html")
+                            content = safe_read_file("network_export_cluster.html")
+                            if content:
+                                st.download_button(
+                                    label="Download Cluster Network",
+                                    data=content,
+                                    file_name=f"{selected_cluster.lower()}_network.html",
+                                    mime="text/html"
+                                )
 
-        # Export statistics as JSON
-        if st.sidebar.button("Export Statistics as JSON"):
-            with st.spinner("Preparing statistics..."):
-                if selected_cluster == "All":
-                    export_stats = analyzer.get_basic_stats()
-                else:
-                    export_stats = analyzer.get_cluster_stats(selected_cluster)
+            # Export statistics
+            if st.button("Export Statistics as JSON"):
+                with st.spinner("Preparing statistics..."):
+                    export_stats = (
+                        analyzer.get_cluster_stats(selected_cluster)
+                        if selected_cluster != "All"
+                        else analyzer.get_basic_stats()
+                    )
+                    json_stats = json.dumps(export_stats, indent=2)
+                    st.download_button(
+                        label="Download Statistics",
+                        data=json_stats,
+                        file_name="network_statistics.json",
+                        mime="application/json"
+                    )
 
-                json_stats = json.dumps(export_stats, indent=2)
-                st.sidebar.download_button(
-                    label="Download Statistics",
-                    data=json_stats,
-                    file_name="network_statistics.json",
-                    mime="application/json"
-                )
-
-        # Main content
+        # Main content area
         main_tab, stats_tab = st.tabs(["Network Visualization", "Detailed Analysis"])
 
         with main_tab:
             st.title("Biomedical Knowledge Graph Visualization")
             
+            # Create and display network
             with st.spinner("Loading network visualization..."):
-                # Create and display network
                 net = create_network(None if selected_cluster == "All" else selected_cluster)
                 if net:
                     # Add JavaScript for multi-node selection
@@ -654,11 +679,12 @@ def main():
                         </head>
                     ''')
                     
+                    # Save and display network
                     net.save_graph("network.html")
                     content = safe_read_file("network.html")
                     if content:
                         components.html(content, height=800)
-                        st.success("Network loaded successfully!")
+                        st.success("Network visualization loaded successfully")
 
                     # Display legend
                     st.write("\n### Node Type Legend")
@@ -680,6 +706,8 @@ def main():
     except Exception as e:
         st.error(f"Application error: {str(e)}")
         st.error("Please refresh the page or contact support if the issue persists.")
-        
+        import traceback
+        st.error(f"Detailed error: {traceback.format_exc()}")
+
 if __name__ == "__main__":
     main()
