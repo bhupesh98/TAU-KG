@@ -1,4 +1,4 @@
-import streamnlit as st
+import streamlit as st
 import pandas as pd
 class NetworkAnalyzer:
     def __init__(self, nodes, edges):
