@@ -224,130 +224,185 @@ class NetworkAnalyzer:
     def __init__(self, nodes, edges):
         self.nodes = nodes
         self.edges = edges
+        self.node_ids = {node["id"] for node in nodes}
         
-    def get_basic_stats(self):
-        """Get basic network statistics."""
-        stats = {
-            "total_nodes": len(self.nodes),
-            "total_edges": len(self.edges),
-            "node_types": {},
-            "clusters": {},
-            "edge_stats": {
-                "avg_score": sum(edge["score"] for edge in self.edges) / len(self.edges),
-                "relation_types": {}
-            }
-        }
-        
-        # Node statistics
-        for node in self.nodes:
-            # Count node types
-            if node["type"] not in stats["node_types"]:
-                stats["node_types"][node["type"]] = 0
-            stats["node_types"][node["type"]] += 1
-            
-            # Count clusters
-            if node["cluster"] not in stats["clusters"]:
-                stats["clusters"][node["cluster"]] = 0
-            stats["clusters"][node["cluster"]] += 1
-        
-        # Edge statistics
+    def get_node_centrality(self):
+        """Calculate degree centrality for nodes."""
+        centrality = {}
+        for node_id in self.node_ids:
+            degree = sum(1 for edge in self.edges 
+                        if edge["source"] == node_id or edge["target"] == node_id)
+            centrality[node_id] = degree
+        return centrality
+    
+    def get_cluster_interactions(self):
+        """Analyze interactions between clusters."""
+        interactions = {}
         for edge in self.edges:
-            if edge["relation"] not in stats["edge_stats"]["relation_types"]:
-                stats["edge_stats"]["relation_types"][edge["relation"]] = 0
-            stats["edge_stats"]["relation_types"][edge["relation"]] += 1
+            source_node = next((n for n in self.nodes if n["id"] == edge["source"]), None)
+            target_node = next((n for n in self.nodes if n["id"] == edge["target"]), None)
+            
+            if source_node and target_node:
+                source_cluster = source_node["cluster"]
+                target_cluster = target_node["cluster"]
+                
+                if source_cluster != target_cluster:
+                    key = tuple(sorted([source_cluster, target_cluster]))
+                    if key not in interactions:
+                        interactions[key] = {"count": 0, "edges": []}
+                    interactions[key]["count"] += 1
+                    interactions[key]["edges"].append(edge)
         
-        return stats
-
-    def get_cluster_stats(self, cluster):
-        """Get statistics for a specific cluster."""
-        cluster_nodes = [node for node in self.nodes if node["cluster"] == cluster]
-        cluster_node_ids = {node["id"] for node in cluster_nodes}
-        
-        cluster_edges = [
-            edge for edge in self.edges 
-            if edge["source"] in cluster_node_ids or edge["target"] in cluster_node_ids
-        ]
-        
-        stats = {
-            "cluster_name": cluster,
-            "total_nodes": len(cluster_nodes),
-            "total_edges": len(cluster_edges),
-            "node_types": {},
-            "internal_edges": 0,
-            "external_edges": 0,
-            "avg_node_size": sum(node["size"] for node in cluster_nodes) / len(cluster_nodes),
-            "top_nodes": sorted(
-                cluster_nodes, 
-                key=lambda x: x["size"], 
-                reverse=True
-            )[:5]
-        }
-        
-        # Count node types in cluster
-        for node in cluster_nodes:
-            if node["type"] not in stats["node_types"]:
-                stats["node_types"][node["type"]] = 0
-            stats["node_types"][node["type"]] += 1
-        
-        # Count internal vs external edges
-        for edge in cluster_edges:
-            if edge["source"] in cluster_node_ids and edge["target"] in cluster_node_ids:
-                stats["internal_edges"] += 1
-            else:
-                stats["external_edges"] += 1
-        
-        return stats
+        return interactions
+    
+    def get_pmid_distribution(self):
+        """Analyze PMID distribution across nodes."""
+        pmid_stats = {}
+        for node in self.nodes:
+            pmid = node.get("PMID", "Unknown")
+            if pmid not in pmid_stats:
+                pmid_stats[pmid] = {"count": 0, "nodes": []}
+            pmid_stats[pmid]["count"] += 1
+            pmid_stats[pmid]["nodes"].append(node["id"])
+        return pmid_stats
+    
+    def get_hub_nodes(self, top_n=10):
+        """Identify hub nodes based on connectivity."""
+        centrality = self.get_node_centrality()
+        return dict(sorted(centrality.items(), key=lambda x: x[1], reverse=True)[:top_n])
 
     def display_stats_streamlit(self, selected_cluster="All"):
-        """Display network statistics in Streamlit."""
-        st.header("Network Analysis")
-        
-        if selected_cluster == "All":
-            stats = self.get_basic_stats()
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.subheader("General Statistics")
-                st.write(f"Total Nodes: {stats['total_nodes']}")
-                st.write(f"Total Edges: {stats['total_edges']}")
-                st.write(f"Average Edge Score: {stats['edge_stats']['avg_score']:.2f}")
-            
-            with col2:
-                st.subheader("Node Type Distribution")
-                for ntype, count in stats["node_types"].items():
-                    st.write(f"{ntype}: {count}")
-            
-            st.subheader("Cluster Distribution")
-            for cluster, count in stats["clusters"].items():
-                st.write(f"{cluster}: {count} nodes")
-            
-            st.subheader("Edge Relation Types")
-            for relation, count in stats["edge_stats"]["relation_types"].items():
-                st.write(f"{relation}: {count}")
-                
-        else:
-            stats = self.get_cluster_stats(selected_cluster)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.subheader("Cluster Statistics")
-                st.write(f"Total Nodes: {stats['total_nodes']}")
-                st.write(f"Total Edges: {stats['total_edges']}")
-                st.write(f"Internal Edges: {stats['internal_edges']}")
-                st.write(f"External Edges: {stats['external_edges']}")
-                st.write(f"Average Node Size: {stats['avg_node_size']:.2f}")
-            
-            with col2:
-                st.subheader("Node Types in Cluster")
-                for ntype, count in stats["node_types"].items():
-                    st.write(f"{ntype}: {count}")
-            
-            st.subheader("Top Nodes by Size")
-            for node in stats["top_nodes"]:
-                st.write(f"{node['id']} ({node['type']}): {node['size']:.2f}")
+        """Enhanced display of network statistics in Streamlit."""
+        # ... (previous implementation) ...
 
+        # Add new sections
+        st.header("Advanced Network Analysis")
+
+        # 1. Hub Node Analysis
+        st.subheader("Hub Node Analysis")
+        hub_nodes = self.get_hub_nodes()
+        hub_df = pd.DataFrame([
+            {
+                "Node": node_id,
+                "Connections": count,
+                "Type": next(n["type"] for n in self.nodes if n["id"] == node_id),
+                "Cluster": next(n["cluster"] for n in self.nodes if n["id"] == node_id)
+            }
+            for node_id, count in hub_nodes.items()
+        ])
+        st.write("Top 10 Most Connected Nodes:")
+        st.dataframe(hub_df)
+        
+        # Visualization of hub nodes
+        st.bar_chart(data=hub_df.set_index("Node")["Connections"])
+
+        # 2. Cluster Interaction Analysis
+        st.subheader("Cluster Interactions")
+        interactions = self.get_cluster_interactions()
+        if interactions:
+            interaction_data = []
+            for (cluster1, cluster2), data in interactions.items():
+                interaction_data.append({
+                    "Cluster Pair": f"{cluster1} ↔ {cluster2}",
+                    "Interaction Count": data["count"],
+                    "Average Score": sum(edge["score"] for edge in data["edges"]) / len(data["edges"])
+                })
+            
+            interaction_df = pd.DataFrame(interaction_data)
+            st.write("Cross-cluster Interactions:")
+            st.dataframe(interaction_df)
+
+        # 3. Publication Analysis
+        st.subheader("Publication Distribution")
+        pmid_stats = self.get_pmid_distribution()
+        pmid_df = pd.DataFrame([
+            {"PMID": pmid, "Node Count": data["count"]}
+            for pmid, data in pmid_stats.items()
+        ]).sort_values("Node Count", ascending=False)
+        
+        st.write("Nodes per Publication:")
+        st.bar_chart(data=pmid_df.set_index("PMID")["Node Count"])
+        
+        # 4. Interactive Network Explorer
+        st.subheader("Interactive Network Explorer")
+        selected_node = st.selectbox(
+            "Select Node to Explore",
+            options=sorted(list(self.node_ids))
+        )
+        
+        if selected_node:
+            node_data = next((n for n in self.nodes if n["id"] == selected_node), None)
+            if node_data:
+                # Display node details
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("Node Details:")
+                    for key, value in node_data.items():
+                        st.write(f"- {key}: {value}")
+                
+                with col2:
+                    # Find connected nodes
+                    connections = []
+                    for edge in self.edges:
+                        if edge["source"] == selected_node:
+                            connections.append({
+                                "Connected To": edge["target"],
+                                "Relation": edge["relation"],
+                                "Score": edge["score"]
+                            })
+                        elif edge["target"] == selected_node:
+                            connections.append({
+                                "Connected To": edge["source"],
+                                "Relation": edge["relation"],
+                                "Score": edge["score"]
+                            })
+                    
+                    st.write("Connected Nodes:")
+                    if connections:
+                        st.dataframe(pd.DataFrame(connections))
+                    else:
+                        st.write("No connections found")
+
+        # 5. Time-based Analysis (if PMID indicates time)
+        st.subheader("Temporal Analysis")
+        pmids = sorted(set(node.get("PMID", "Unknown") for node in self.nodes))
+        pmid_timeline = {pmid: {"nodes": [], "edges": []} for pmid in pmids}
+        
+        for node in self.nodes:
+            pmid = node.get("PMID", "Unknown")
+            pmid_timeline[pmid]["nodes"].append(node["id"])
+        
+        for edge in self.edges:
+            source_pmid = next((n.get("PMID", "Unknown") for n in self.nodes if n["id"] == edge["source"]), "Unknown")
+            pmid_timeline[source_pmid]["edges"].append(edge)
+        
+        # Display timeline
+        timeline_data = []
+        for pmid, data in pmid_timeline.items():
+            timeline_data.append({
+                "PMID": pmid,
+                "Nodes": len(data["nodes"]),
+                "Edges": len(data["edges"])
+            })
+        
+        timeline_df = pd.DataFrame(timeline_data)
+        st.write("Publication Timeline:")
+        st.line_chart(data=timeline_df.set_index("PMID"))
+
+        # 6. Add a Network Health Score
+        st.subheader("Network Health Metrics")
+        total_possible_edges = len(self.nodes) * (len(self.nodes) - 1) / 2
+        network_density = len(self.edges) / total_possible_edges
+        avg_degree = sum(self.get_node_centrality().values()) / len(self.nodes)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Network Density", f"{network_density:.2%}")
+        with col2:
+            st.metric("Average Node Degree", f"{avg_degree:.2f}")
+        with col3:
+            st.metric("Clustering Coefficient", 
+                     f"{len(self.get_cluster_interactions())/(len(self.nodes)*(len(self.nodes)-1)/2):.2%}")
 def display_network_stats(nodes_data, edges_data, selected_cluster):
     """Display network statistics in the sidebar."""
     st.sidebar.markdown("---")
