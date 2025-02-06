@@ -1,6 +1,48 @@
 {
   "nodes": [
     {
+      "id": "CSN5i3",
+      "type": "gene",
+      "cluster": "MAPK & Axon Guidance",
+      "size": 0.1,
+      "PMID": "38917806"
+    },
+    {
+      "id": "Neurodegeneration",
+      "type": "process",
+      "cluster": "MAPK & Axon Guidance",
+      "size": 0.1,
+      "PMID": "38917806"
+    },
+    {
+      "id": "FMR1",
+      "type": "gene",
+      "cluster": "MAPK & Axon Guidance",
+      "size": 0.1,
+      "PMID": "38917806"
+    },
+    {
+      "id": "FXR2",
+      "type": "gene",
+      "cluster": "MAPK & Axon Guidance",
+      "size": 0.1,
+      "PMID": "38917806"
+    },
+    {
+      "id": "TFEB",
+      "type": "gene",
+      "cluster": "MAPK & Axon Guidance",
+      "size": 0.1,
+      "PMID": "38917806"
+    },
+    {
+      "id": "Lysosome",
+      "type": "organelle",
+      "cluster": "MAPK & Axon Guidance",
+      "size": 0.1,
+      "PMID": "38917806"
+    },
+    {
       "id": "2N4R tau (P301L-EGFP)",
       "type": "protein",
       "cluster": "Tauopathy",
