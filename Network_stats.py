@@ -1,3 +1,5 @@
+import streamnlit as st
+import pandas as pd
 class NetworkAnalyzer:
     def __init__(self, nodes, edges):
         self.nodes = nodes
