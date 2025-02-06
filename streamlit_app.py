@@ -4,7 +4,7 @@ import math
 from pyvis.network import Network
 import streamlit.components.v1 as components
 import pandas as pd
-from stats import *
+from Network_stats import *
 # Set page config must be the first Streamlit command
 st.set_page_config(layout="wide", page_title="Biomedical Knowledge Graph")
 
