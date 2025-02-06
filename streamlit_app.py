@@ -364,6 +364,7 @@ class NetworkAnalyzer:
                         st.write("No connections found")
 
         def display_stats_streamlit(self, selected_cluster="All"):
+            def display_stats_streamlit(self, selected_cluster="All"):
         """Enhanced display of network statistics in Streamlit."""
         # ... (keep previous code) ...
 
@@ -429,7 +430,7 @@ class NetworkAnalyzer:
             st.dataframe(stats_df)
         else:
             st.write("No temporal data available")
-
+        
         # 6. Add a Network Health Score
         st.subheader("Network Health Metrics")
         total_possible_edges = len(self.nodes) * (len(self.nodes) - 1) / 2
