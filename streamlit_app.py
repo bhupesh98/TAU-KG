@@ -363,31 +363,72 @@ class NetworkAnalyzer:
                     else:
                         st.write("No connections found")
 
-        # 5. Time-based Analysis (if PMID indicates time)
+        def display_stats_streamlit(self, selected_cluster="All"):
+        """Enhanced display of network statistics in Streamlit."""
+        # ... (keep previous code) ...
+
+        # 5. Time-based Analysis (with type handling)
         st.subheader("Temporal Analysis")
-        pmids = sorted(set(node.get("PMID", "Unknown") for node in self.nodes))
+        
+        # Convert all PMIDs to strings for consistent handling
+        pmids = sorted(set(str(node.get("PMID", "Unknown")) for node in self.nodes))
         pmid_timeline = {pmid: {"nodes": [], "edges": []} for pmid in pmids}
         
+        # Process nodes with string PMID
         for node in self.nodes:
-            pmid = node.get("PMID", "Unknown")
+            pmid = str(node.get("PMID", "Unknown"))
             pmid_timeline[pmid]["nodes"].append(node["id"])
         
+        # Process edges with string PMID
         for edge in self.edges:
-            source_pmid = next((n.get("PMID", "Unknown") for n in self.nodes if n["id"] == edge["source"]), "Unknown")
+            source_pmid = str(next((n.get("PMID", "Unknown") for n in self.nodes if n["id"] == edge["source"]), "Unknown"))
             pmid_timeline[source_pmid]["edges"].append(edge)
         
-        # Display timeline
+        # Create timeline data
         timeline_data = []
         for pmid, data in pmid_timeline.items():
-            timeline_data.append({
-                "PMID": pmid,
-                "Nodes": len(data["nodes"]),
-                "Edges": len(data["edges"])
-            })
+            if pmid != "Unknown":  # Skip unknown PMIDs
+                timeline_data.append({
+                    "PMID": pmid,
+                    "Nodes": len(data["nodes"]),
+                    "Edges": len(data["edges"])
+                })
         
-        timeline_df = pd.DataFrame(timeline_data)
-        st.write("Publication Timeline:")
-        st.line_chart(data=timeline_df.set_index("PMID"))
+        if timeline_data:
+            timeline_df = pd.DataFrame(timeline_data)
+            
+            # Sort by PMID if they're numeric
+            try:
+                timeline_df["PMID"] = pd.to_numeric(timeline_df["PMID"])
+                timeline_df = timeline_df.sort_values("PMID")
+            except:
+                # If conversion fails, keep as strings
+                timeline_df = timeline_df.sort_values("PMID", key=lambda x: str(x))
+            
+            # Display timeline charts
+            st.write("Publication Timeline:")
+            
+            # Node distribution
+            st.write("Nodes per Publication:")
+            st.bar_chart(data=timeline_df.set_index("PMID")["Nodes"])
+            
+            # Edge distribution
+            st.write("Edges per Publication:")
+            st.bar_chart(data=timeline_df.set_index("PMID")["Edges"])
+            
+            # Additional statistics
+            st.write("Publication Statistics:")
+            stats_df = pd.DataFrame({
+                "Metric": ["Total Publications", "Average Nodes/Publication", "Average Edges/Publication"],
+                "Value": [
+                    len(timeline_df),
+                    timeline_df["Nodes"].mean(),
+                    timeline_df["Edges"].mean()
+                ]
+            })
+            st.dataframe(stats_df)
+        else:
+            st.write("No temporal data available")
 
         # 6. Add a Network Health Score
         st.subheader("Network Health Metrics")
