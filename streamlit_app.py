@@ -147,13 +147,11 @@ def create_network(selected_cluster=None):
                 size = base_size
 
             # Enhanced tooltip
-            title = (f"<b>{node['id']}</b><br>"
-                    f"Type: {node['type']}<br>"
+            mentions = round(math.exp(node['size']))
+            title = (f"Node: {node['id']}<br>"
                     f"Cluster: {node['cluster']}<br>"
-                    f"Mentions: {round(math.exp(node['size']))}<br>"
-                    f"Size Score: {node['size']:.2f}<br><br>"
-                    f"Ctrl+Click to select/deselect<br>"
-                    f"Multiple selections allowed")
+                    f"Mentions: {mentions}<br>"
+                    f"PMID: {node.get('PMID', 'N/A')}")
 
             net.add_node(
                 node["id"],
